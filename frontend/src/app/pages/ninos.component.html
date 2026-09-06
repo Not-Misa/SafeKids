@@ -1,0 +1,112 @@
+<app-shell active="ninos">
+  <main class="sk-page children-page">
+    <header class="page-heading">
+      <div>
+        <span>Expedientes infantiles</span>
+        <h1>Administrar niños</h1>
+        <p>Consulta los perfiles registrados en esta guardería.</p>
+      </div>
+      <a class="add-child-button" routerLink="/administrar-clientes/nuevo">
+        <span aria-hidden="true">+</span>
+        Registrar niño
+      </a>
+    </header>
+
+    <section class="list-tools" aria-label="Herramientas del listado">
+      <div class="list-search">
+        <img src="assets/icons/search.svg" alt="" />
+        <input
+          type="search"
+          [ngModel]="busqueda"
+          (ngModelChange)="onBusquedaChange($event)"
+          placeholder="Buscar por nombre o apellido..."
+          autocomplete="off"
+        />
+      </div>
+      <span>{{ ninos.length }} {{ ninos.length === 1 ? 'registro' : 'registros' }}</span>
+    </section>
+
+    @if (mensajeError) {
+      <div class="list-message error" role="alert">
+        <strong>No pudimos cargar el listado</strong>
+        <span>{{ mensajeError }}</span>
+        <button type="button" (click)="cargarNinos()">Reintentar</button>
+      </div>
+    } @else if (cargando) {
+      <div class="list-message" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <strong>Cargando niños...</strong>
+      </div>
+    } @else if (ninos.length === 0) {
+      <div class="list-message empty">
+        <img src="assets/images/default-user.jpg" alt="" />
+        <strong>No hay resultados</strong>
+        <span>
+          {{ busqueda ? 'Prueba con otro nombre.' : 'Registra el primer niño de la guardería.' }}
+        </span>
+      </div>
+    } @else {
+      <div class="children-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Niño</th>
+              <th>Nacimiento</th>
+              <th>Edad</th>
+              <th>Género</th>
+              <th>Alergias</th>
+              <th>Tutores</th>
+              <th>Estado</th>
+              <th><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (nino of ninos; track nino.id_nino) {
+              <tr>
+                <td>
+                  <div class="child-cell">
+                    <img [src]="nino.foto_url || defaultUserImage" [alt]="nino.nombres" />
+                    <div>
+                      <strong>{{ nino.nombres }} {{ nino.apellidos }}</strong>
+                      <span
+                        >Ingreso:
+                        {{
+                          nino.fecha_ingreso
+                            ? fechaCorta(nino.fecha_ingreso)
+                            : 'Sin fecha registrada'
+                        }}</span
+                      >
+                    </div>
+                  </div>
+                </td>
+                <td>{{ fechaCorta(nino.fecha_nacimiento) }}</td>
+                <td>{{ nino.edad }} años</td>
+                <td>{{ generoLegible(nino.genero) }}</td>
+                <td>
+                  <span [class.allergy-text]="nino.alergias">
+                    {{ nino.alergias || 'Ninguna registrada' }}
+                  </span>
+                </td>
+                <td>{{ nino.cantidad_tutores }}</td>
+                <td>
+                  <span class="state-badge" [class.inactive]="nino.estado !== 'ACTIVO'">
+                    {{ nino.estado }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    class="view-profile-button"
+                    type="button"
+                    (click)="abrirPerfil(nino.id_nino)"
+                  >
+                    Ver perfil
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </main>
+</app-shell>

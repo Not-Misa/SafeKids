@@ -1,0 +1,255 @@
+<app-shell active="avisos">
+  <main class="notice-history-page">
+    <header class="notice-heading">
+      <div>
+        <span>Comunicación de la guardería</span>
+        <h1>Historial de avisos generales</h1>
+        <p>Consulta los mensajes globales publicados por todo el equipo.</p>
+      </div>
+
+      <a class="new-notice-button" routerLink="/notificaciones">
+        <img src="assets/icons/plus.svg" alt="" />
+        Crear aviso
+      </a>
+    </header>
+
+    <form class="notice-tools" (ngSubmit)="cargarAvisos()" aria-label="Filtros del historial">
+      <label class="search-field">
+        <span>Buscar</span>
+        <div>
+          <img src="assets/icons/search.svg" alt="" />
+          <input
+            [(ngModel)]="buscar"
+            name="buscar"
+            maxlength="100"
+            placeholder="Asunto, contenido o empleado"
+          />
+        </div>
+      </label>
+
+      <label>
+        <span>Tipo</span>
+        <select [(ngModel)]="tipo" name="tipo">
+          <option value="TODOS">Todos</option>
+          @for (opcion of tipos; track opcion.codigo) {
+            <option [value]="opcion.codigo">{{ opcion.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Prioridad</span>
+        <select [(ngModel)]="prioridad" name="prioridad">
+          <option value="TODAS">Todas</option>
+          <option value="NORMAL">Normal</option>
+          <option value="IMPORTANTE">Importante</option>
+          <option value="URGENTE">Urgente</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Desde</span>
+        <input [(ngModel)]="fechaDesde" name="fechaDesde" type="date" />
+      </label>
+
+      <label>
+        <span>Hasta</span>
+        <input [(ngModel)]="fechaHasta" name="fechaHasta" type="date" />
+      </label>
+
+      <button class="filter-button" type="submit">Aplicar</button>
+      <button class="clear-button" type="button" (click)="limpiarFiltros()">Limpiar</button>
+    </form>
+
+    @if (!cargando && !mensajeError && avisos.length > 0) {
+      <section class="notice-summary" aria-label="Resumen del historial">
+        <div>
+          <strong>{{ avisos.length }}</strong>
+          <span>Avisos mostrados</span>
+        </div>
+        <div>
+          <strong>{{ totalDestinatarios }}</strong>
+          <span>Entregas registradas</span>
+        </div>
+        <div>
+          <strong>{{ totalVistos }}</strong>
+          <span>Lecturas</span>
+        </div>
+        <div>
+          <strong>{{ avisosUrgentes }}</strong>
+          <span>Urgentes</span>
+        </div>
+      </section>
+    }
+
+    @if (cargando) {
+      <section class="notice-status" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h2>Cargando avisos...</h2>
+      </section>
+    } @else if (mensajeError) {
+      <section class="notice-status error" role="alert">
+        <img src="assets/icons/info-circle.svg" alt="" />
+        <h2>No pudimos consultar los avisos</h2>
+        <p>{{ mensajeError }}</p>
+        <button type="button" (click)="cargarAvisos()">Intentar de nuevo</button>
+      </section>
+    } @else if (avisos.length === 0) {
+      <section class="notice-status">
+        <img src="assets/icons/speakerphone.svg" alt="" />
+        <h2>No hay avisos con estos filtros</h2>
+        <p>Prueba con otro periodo o crea el primer aviso general.</p>
+        <a routerLink="/notificaciones">Crear aviso</a>
+      </section>
+    } @else {
+      <section class="notice-timeline" aria-label="Avisos generales">
+        @for (grupo of gruposAvisos; track grupo.fecha) {
+          <h2 class="date-heading">{{ grupo.etiqueta }}</h2>
+
+          @for (aviso of grupo.avisos; track aviso.id_notificacion) {
+            <article
+              class="notice-item"
+              [class.importante]="aviso.prioridad === 'IMPORTANTE'"
+              [class.urgente]="aviso.prioridad === 'URGENTE'"
+              role="button"
+              tabindex="0"
+              (click)="abrirAviso(aviso)"
+              (keydown.enter)="abrirAviso(aviso)"
+              (keydown.space)="$event.preventDefault(); abrirAviso(aviso)"
+            >
+              <div class="notice-marker" [attr.data-type]="aviso.tipo.codigo">
+                <img src="assets/icons/speakerphone.svg" alt="" />
+              </div>
+
+              <div class="notice-content">
+                <header>
+                  <div>
+                    <span class="notice-type">{{ aviso.tipo.nombre }}</span>
+                    <h3>{{ aviso.titulo }}</h3>
+                  </div>
+
+                  <div class="notice-meta">
+                    <span class="priority-badge" [class]="clasePrioridad(aviso.prioridad)">
+                      {{ etiquetaPrioridad(aviso.prioridad) }}
+                    </span>
+                    <time [attr.datetime]="aviso.publicada_en">
+                      {{ formatearHora(aviso.publicada_en) }}
+                    </time>
+                  </div>
+                </header>
+
+                <div class="notice-description-row">
+                  <p class="notice-message">{{ aviso.mensaje }}</p>
+
+                  @if (aviso.imagen_url) {
+                    <div
+                      class="attachment-indicator"
+                      aria-hidden="true"
+                    >
+                      <img src="assets/icons/photo.svg" alt="" />
+                      <span>Abrir</span>
+                    </div>
+                  }
+                </div>
+
+                <footer>
+                  <div class="author">
+                    <img
+                      [src]="aviso.empleado.foto_url || defaultUserImage"
+                      [alt]="aviso.empleado.nombres"
+                    />
+                    <span>
+                      Publicado por
+                      <strong>{{ aviso.empleado.nombres }} {{ aviso.empleado.apellidos }}</strong>
+                    </span>
+                  </div>
+
+                  <dl class="delivery-stats">
+                    <div>
+                      <dt>Destinatarios</dt>
+                      <dd>{{ aviso.entrega.destinatarios }}</dd>
+                    </div>
+                    <div>
+                      <dt>Push</dt>
+                      <dd>{{ aviso.entrega.push_enviados }}</dd>
+                    </div>
+                    <div>
+                      <dt>Vistos</dt>
+                      <dd>{{ aviso.entrega.vistos }}</dd>
+                    </div>
+                    @if (aviso.requiere_confirmacion) {
+                      <div>
+                        <dt>Confirmados</dt>
+                        <dd>{{ aviso.entrega.confirmados }}</dd>
+                      </div>
+                    }
+                  </dl>
+                </footer>
+              </div>
+            </article>
+          }
+        }
+      </section>
+    }
+  </main>
+
+  @if (avisoSeleccionado; as avisoDetalle) {
+    <div class="notice-dialog-backdrop" (click)="cerrarAviso()">
+      <section
+        class="notice-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notice-dialog-title"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="notice-dialog-heading">
+          <div>
+            <span>{{ avisoDetalle.tipo.nombre }}</span>
+            <h2 id="notice-dialog-title">{{ avisoDetalle.titulo }}</h2>
+          </div>
+          <button type="button" aria-label="Cerrar detalle" (click)="cerrarAviso()">
+            &times;
+          </button>
+        </header>
+
+        <div class="notice-dialog-meta">
+          <span class="priority-badge" [class]="clasePrioridad(avisoDetalle.prioridad)">
+            {{ etiquetaPrioridad(avisoDetalle.prioridad) }}
+          </span>
+          <span>Notificación global</span>
+          <time [attr.datetime]="avisoDetalle.publicada_en">
+            {{ formatearFecha(avisoDetalle.publicada_en.slice(0, 10)) }},
+            {{ formatearHora(avisoDetalle.publicada_en) }}
+          </time>
+        </div>
+
+        <p class="notice-dialog-message">{{ avisoDetalle.mensaje }}</p>
+
+        @if (avisoDetalle.imagen_url) {
+          <figure class="notice-dialog-image">
+            <img
+              [src]="avisoDetalle.imagen_url"
+              [alt]="'Imagen adjunta de ' + avisoDetalle.titulo"
+            />
+          </figure>
+        }
+
+        <footer class="notice-dialog-footer">
+          <div class="author">
+            <img
+              [src]="avisoDetalle.empleado.foto_url || defaultUserImage"
+              [alt]="avisoDetalle.empleado.nombres"
+            />
+            <span>
+              Publicado por
+              <strong>
+                {{ avisoDetalle.empleado.nombres }} {{ avisoDetalle.empleado.apellidos }}
+              </strong>
+            </span>
+          </div>
+          <span>{{ avisoDetalle.entrega.destinatarios }} tutores destinatarios</span>
+        </footer>
+      </section>
+    </div>
+  }
+</app-shell>

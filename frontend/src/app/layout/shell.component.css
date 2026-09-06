@@ -1,0 +1,471 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--sk-bg);
+}
+
+.sk-header {
+  min-height: 174px;
+  background: var(--sk-blue);
+  color: #fff;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 5px 14px rgba(26, 60, 106, 0.18);
+  padding: 28px min(7.6vw, 144px) 16px;
+}
+
+.sk-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.sk-brand {
+  color: #fff;
+  font-size: clamp(2.15rem, 3vw, 2.75rem);
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.sk-user-tools {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.sk-avatar-link {
+  display: block;
+  border-radius: 50%;
+  outline: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.sk-avatar-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 16px rgba(17, 55, 103, 0.25);
+}
+
+.sk-avatar-link:focus-visible {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.42);
+}
+
+.sk-avatar {
+  display: block;
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  border: 4px solid rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  background: #dbe4ec;
+  object-fit: cover;
+}
+
+.sk-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+}
+
+.sk-settings-wrap {
+  position: relative;
+}
+
+.sk-settings {
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  background: transparent;
+  border-radius: 50%;
+  transition:
+    transform 180ms ease,
+    background 180ms ease;
+}
+
+.sk-settings img {
+  display: block;
+  width: 58px;
+  height: 58px;
+  transition: transform 220ms ease;
+}
+
+.sk-settings:hover,
+.sk-settings.open {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.sk-settings:hover img,
+.sk-settings.open img {
+  transform: rotate(24deg);
+}
+
+.sk-settings:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.sk-settings-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  padding: 6px;
+  border: 1px solid #dce3ec;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgba(25, 45, 75, 0.2);
+  animation: settings-enter 160ms ease both;
+}
+
+.sk-settings-menu button {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #27354a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sk-settings-menu button:hover,
+.sk-settings-menu button:focus-visible {
+  background: #f0f5fb;
+  outline: none;
+}
+
+.sk-settings-menu button + button {
+  border-top: 1px solid #e8edf3;
+  border-radius: 0 0 6px 6px;
+}
+
+.sk-settings-menu button > img {
+  width: 25px;
+  height: 25px;
+  justify-self: center;
+}
+
+.sk-settings-menu button > span {
+  display: grid;
+  gap: 2px;
+}
+
+.sk-settings-menu strong {
+  font-size: 0.86rem;
+}
+
+.sk-settings-menu small {
+  color: #718096;
+  font-size: 0.7rem;
+}
+
+.sk-settings-menu .logout-option strong {
+  color: #b42333;
+}
+
+.sk-settings-menu .logout-option img {
+  filter: invert(23%) sepia(72%) saturate(1741%) hue-rotate(329deg) brightness(84%);
+}
+
+.sk-modal-backdrop {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 32, 52, 0.52);
+  backdrop-filter: blur(2px);
+  animation: backdrop-enter 160ms ease both;
+}
+
+.sk-about-dialog {
+  width: min(570px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border: 1px solid #dbe3ed;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+  box-shadow: 0 24px 56px rgba(17, 32, 52, 0.28);
+  animation: dialog-enter 190ms ease both;
+}
+
+.sk-about-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid #e4eaf1;
+}
+
+.about-product {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.about-product > img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.about-product span {
+  color: var(--sk-blue);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.about-product h2 {
+  margin: 3px 0 0;
+  font-size: 1.45rem;
+}
+
+.about-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #eef3f8;
+  color: #536278;
+  font-size: 1.55rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.about-close:hover {
+  background: #e1e8f0;
+  color: #27354a;
+}
+
+.about-description {
+  margin: 0;
+  padding: 22px 26px 4px;
+  color: #526176;
+  line-height: 1.55;
+}
+
+.about-details {
+  margin: 0;
+  padding: 10px 26px 22px;
+}
+
+.about-details div {
+  display: grid;
+  grid-template-columns: 135px 1fr;
+  gap: 18px;
+  padding: 13px 0;
+  border-bottom: 1px solid #e8edf3;
+}
+
+.about-details div:last-child {
+  border-bottom: 0;
+}
+
+.about-details dt {
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.about-details dd {
+  margin: 0;
+  color: #65748a;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.sk-about-dialog > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 26px;
+  border-top: 1px solid #e4eaf1;
+  background: #f7f9fc;
+}
+
+.sk-about-dialog > footer span {
+  color: #718096;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.sk-about-dialog > footer button {
+  min-height: 39px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--sk-blue);
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+@keyframes settings-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sk-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 5vw, 72px);
+  margin-top: 42px;
+  flex-wrap: wrap;
+}
+
+.sk-nav-link {
+  position: relative;
+  min-width: 80px;
+  padding: 0 0 18px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1.08rem;
+  font-weight: 850;
+  text-align: center;
+  text-decoration: none;
+}
+
+.sk-nav-link:hover,
+.sk-nav-link.active {
+  color: #fff;
+}
+
+.sk-nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(90px, 100%);
+  height: 3px;
+  border-radius: 999px;
+  background: #fff;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 840px) {
+  .sk-header {
+    min-height: auto;
+    padding: 22px 20px 18px;
+  }
+
+  .sk-header-top {
+    align-items: center;
+  }
+
+  .sk-user-tools {
+    gap: 12px;
+  }
+
+  .sk-avatar {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+    border-width: 3px;
+  }
+
+  .sk-settings {
+    width: 42px;
+    height: 42px;
+  }
+
+  .sk-settings img {
+    width: 42px;
+    height: 42px;
+  }
+
+  .sk-settings-menu {
+    width: min(250px, calc(100vw - 40px));
+  }
+
+  .sk-nav {
+    justify-content: flex-start;
+    gap: 18px;
+    margin-top: 28px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .sk-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sk-nav-link {
+    flex: 0 0 auto;
+    min-width: auto;
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .about-details div {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .sk-about-dialog > header,
+  .about-description,
+  .about-details,
+  .sk-about-dialog > footer {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-avatar-link,
+  .sk-settings,
+  .sk-settings img,
+  .sk-settings-menu,
+  .sk-modal-backdrop,
+  .sk-about-dialog {
+    animation: none;
+    transition: none;
+  }
+}

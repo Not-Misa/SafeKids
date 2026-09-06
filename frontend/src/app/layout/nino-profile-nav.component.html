@@ -1,0 +1,45 @@
+<nav class="profile-tabs" aria-label="Opciones del perfil">
+  <a
+    class="profile-tab"
+    [class.active]="active === 'perfil'"
+    [routerLink]="['/ninos', idNino]"
+  >
+    Perfil del niño
+  </a>
+
+  @if (ninoActivo) {
+    <a
+      class="profile-tab"
+      [class.active]="active === 'notificacion'"
+      [routerLink]="['/ninos', idNino, 'notificaciones', 'nueva']"
+    >
+      Nueva notificación
+    </a>
+    <a
+      class="profile-tab"
+      [class.active]="active === 'reporte'"
+      [routerLink]="['/ninos', idNino, 'reportes', 'nuevo']"
+    >
+      Nuevo reporte
+    </a>
+  } @else {
+    <span class="profile-tab disabled" aria-disabled="true">Nueva notificación</span>
+    <span class="profile-tab disabled" aria-disabled="true">Nuevo reporte</span>
+  }
+
+  <a
+    class="profile-tab"
+    [class.active]="active === 'historial'"
+    [routerLink]="['/ninos', idNino, 'reportes']"
+  >
+    Historial diario
+  </a>
+
+  <a
+    class="profile-tab"
+    [class.active]="active === 'notificaciones'"
+    [routerLink]="['/ninos', idNino, 'notificaciones']"
+  >
+    Historial de notificaciones
+  </a>
+</nav>

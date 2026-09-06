@@ -1,0 +1,67 @@
+<app-shell active="inicio">
+  <main class="sk-page sk-dashboard" *ngIf="empleado">
+    <section class="sk-dashboard-welcome">
+      <p>Bienvenido, {{ empleado.nombres }} {{ empleado.apellidos }}</p>
+      <span>{{ usuario.rol }} · {{ empleado.puesto }}</span>
+    </section>
+
+    <div class="sk-search-panel">
+      <img src="assets/icons/search.svg" class="search-icon" alt="Icono Buscar" />
+      <input
+        type="text"
+        [ngModel]="busquedaQuery"
+        (ngModelChange)="onBusquedaChange($event)"
+        placeholder="Buscar niño por nombre o apellido..."
+        autocomplete="off"
+      />
+
+      <div class="search-dropdown-menu" [class.hidden]="busquedaQuery.trim().length === 0">
+        <div class="dropdown-header">Resultados de búsqueda</div>
+        <div class="dropdown-content">
+          @if (buscandoNinos) {
+            <p class="sk-search-message">Buscando...</p>
+          } @else if (busquedaError) {
+            <p class="sk-search-message error">{{ busquedaError }}</p>
+          } @else if (ninosEncontrados.length === 0) {
+            <p class="sk-search-message">No se encontraron niños con ese nombre.</p>
+          } @else {
+            @for (nino of ninosEncontrados; track nino.id_nino) {
+              <button class="sk-search-result" type="button" (click)="seleccionarNino(nino)">
+                <img [src]="nino.foto_url || defaultUserImage" [alt]="nino.nombres" />
+                <span>
+                  <strong>{{ nino.nombres }} {{ nino.apellidos }}</strong>
+                  <small>
+                    {{ nino.edad }} años
+                    @if (nino.alergias) {
+                      · Alergias: {{ nino.alergias }}
+                    }
+                  </small>
+                </span>
+              </button>
+            }
+          }
+        </div>
+      </div>
+    </div>
+
+    <section class="sk-recents">
+      <h1>Búsquedas Recientes</h1>
+
+      @if (ninosRecientes.length === 0) {
+        <div class="sk-empty-state">
+          <img src="assets/images/default-user.jpg" alt="" />
+          <p>No hay búsquedas recientes.</p>
+        </div>
+      } @else {
+        <div class="sk-recent-grid">
+          @for (nino of ninosRecientes; track nino.id_nino) {
+            <button class="sk-recent-child" type="button" (click)="abrirNino(nino)">
+              <img [src]="nino.foto_url || defaultUserImage" [alt]="nino.nombres" />
+              <span>{{ nino.nombres }} {{ nino.apellidos }}</span>
+            </button>
+          }
+        </div>
+      }
+    </section>
+  </main>
+</app-shell>

@@ -1,0 +1,349 @@
+<app-shell active="ninos">
+  <app-nino-profile-nav
+    [idNino]="idNino"
+    active="reporte"
+    [ninoActivo]="!nino || nino.estado === 'ACTIVO'"
+  />
+
+  <main class="report-page">
+    @if (cargando) {
+      <section class="status-view" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h1>Cargando formulario</h1>
+        <p>Estamos preparando los tipos de reporte disponibles.</p>
+      </section>
+    } @else if (mensajeError && !nino) {
+      <section class="status-view error-view" role="alert">
+        <span class="status-symbol" aria-hidden="true">!</span>
+        <h1>No pudimos abrir el formulario</h1>
+        <p>{{ mensajeError }}</p>
+        <button type="button" (click)="volverPerfil()">Volver al perfil</button>
+      </section>
+    } @else if (idEventoCreado) {
+      <section class="success-view" role="status">
+        <span class="success-symbol" aria-hidden="true">✓</span>
+        <h1>Reporte registrado</h1>
+        <p>La actividad diaria quedó agregada al historial de {{ nino?.nombres }}.</p>
+        @if (mensajeAdvertencia) {
+          <p class="success-warning" role="alert">{{ mensajeAdvertencia }}</p>
+        }
+        <div class="success-actions">
+          <button class="primary-button" type="button" (click)="verHistorial()">
+            Ver historial
+          </button>
+          <button class="secondary-button" type="button" (click)="registrarOtro()">
+            Registrar otro
+          </button>
+        </div>
+      </section>
+    } @else if (nino) {
+      <header class="report-heading">
+        <div>
+          <span>Actividad cotidiana</span>
+          <h1>Nuevo reporte diario</h1>
+          <p>Registra un evento ocurrido durante la estancia en la guardería.</p>
+        </div>
+        <div class="child-context">
+          <img
+            [src]="nino.foto_url || defaultUserImage"
+            [alt]="'Fotografía de ' + nino.nombres"
+          />
+          <div>
+            <span>Expediente</span>
+            <strong>{{ nino.nombres }} {{ nino.apellidos }}</strong>
+          </div>
+        </div>
+      </header>
+
+      @if (nino.estado !== 'ACTIVO') {
+        <section class="status-view error-view">
+          <span class="status-symbol" aria-hidden="true">!</span>
+          <h2>Expediente inactivo</h2>
+          <p>{{ mensajeError }}</p>
+          <button type="button" (click)="verHistorial()">Consultar historial</button>
+        </section>
+      } @else {
+        <form #reporteForm="ngForm" class="report-form" (ngSubmit)="guardar(reporteForm)">
+          <section class="form-section" aria-labelledby="event-title">
+            <div class="section-heading">
+              <span>01</span>
+              <div>
+                <h2 id="event-title">Tipo y momento</h2>
+                <p>Clasifica el evento y señala cuándo ocurrió.</p>
+              </div>
+            </div>
+
+            <div class="form-grid three-columns">
+              <label class="form-field">
+                <span>Tipo de reporte <b>*</b></span>
+                <select
+                  [(ngModel)]="idTipoEvento"
+                  name="idTipoEvento"
+                  (ngModelChange)="alCambiarTipo()"
+                  required
+                >
+                  <option [ngValue]="null" disabled>Selecciona una opción</option>
+                  @for (tipo of tipos; track tipo.id_tipo_evento) {
+                    <option [ngValue]="tipo.id_tipo_evento">{{ tipo.nombre }}</option>
+                  }
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Fecha y hora <b>*</b></span>
+                <input
+                  type="datetime-local"
+                  [(ngModel)]="fechaHoraEvento"
+                  name="fechaHoraEvento"
+                  [min]="fechaMinima"
+                  [max]="fechaMaxima"
+                  required
+                />
+              </label>
+              <label class="form-field">
+                <span>Nivel <b>*</b></span>
+                <select [(ngModel)]="nivel" name="nivel" required>
+                  <option value="INFORMATIVO">Informativo</option>
+                  <option value="IMPORTANTE">Importante</option>
+                  <option value="URGENTE">Urgente</option>
+                </select>
+              </label>
+            </div>
+
+            @if (tipoSeleccionado) {
+              <p class="type-description">{{ tipoSeleccionado.descripcion }}</p>
+            }
+          </section>
+
+          <section class="form-section" aria-labelledby="detail-title">
+            <div class="section-heading">
+              <span>02</span>
+              <div>
+                <h2 id="detail-title">Detalle del reporte</h2>
+                <p>Agrega la información necesaria para comprender lo ocurrido.</p>
+              </div>
+            </div>
+
+            <div class="form-grid two-columns">
+              <label class="form-field full-field">
+                <span>Título</span>
+                <input
+                  [(ngModel)]="titulo"
+                  name="titulo"
+                  maxlength="150"
+                  placeholder="Resumen breve del evento..."
+                />
+              </label>
+              <label class="form-field full-field">
+                <span>
+                  Descripción
+                  @if (tipoSeleccionado?.requiere_detalle) {
+                    <b>*</b>
+                  }
+                </span>
+                <textarea
+                  [(ngModel)]="descripcion"
+                  name="descripcion"
+                  maxlength="3000"
+                  [required]="tipoSeleccionado?.requiere_detalle || false"
+                  placeholder="Describe lo ocurrido y cualquier observación relevante..."
+                ></textarea>
+              </label>
+            </div>
+
+            @switch (tipoSeleccionado?.codigo) {
+              @case ('ALIMENTACION') {
+                <div class="form-grid two-columns extra-fields">
+                  <label class="form-field">
+                    <span>Alimento o menú <b>*</b></span>
+                    <input [(ngModel)]="detalle.alimento" name="alimento" required />
+                  </label>
+                  <label class="form-field">
+                    <span>Cantidad consumida <b>*</b></span>
+                    <select
+                      [(ngModel)]="detalle.cantidad_consumida"
+                      name="cantidadConsumida"
+                      required
+                    >
+                      <option value="" disabled>Selecciona</option>
+                      <option value="Todo">Todo</option>
+                      <option value="La mayoría">La mayoría</option>
+                      <option value="La mitad">La mitad</option>
+                      <option value="Poco">Poco</option>
+                      <option value="Rechazó el alimento">Lo rechazó</option>
+                    </select>
+                  </label>
+                </div>
+              }
+              @case ('CAMBIO_PANAL') {
+                <div class="form-grid two-columns extra-fields">
+                  <label class="form-field">
+                    <span>Tipo de cambio <b>*</b></span>
+                    <select [(ngModel)]="detalle.tipo_cambio" name="tipoCambio" required>
+                      <option value="" disabled>Selecciona</option>
+                      <option value="Mojado">Mojado</option>
+                      <option value="Evacuación">Evacuación</option>
+                      <option value="Mixto">Mixto</option>
+                      <option value="Preventivo">Preventivo</option>
+                    </select>
+                  </label>
+                </div>
+              }
+              @case ('BANO') {
+                <div class="form-grid two-columns extra-fields">
+                  <label class="form-field">
+                    <span>Resultado <b>*</b></span>
+                    <input [(ngModel)]="detalle.resultado" name="resultadoBano" required />
+                  </label>
+                </div>
+              }
+              @case ('MEDICAMENTO') {
+                <div class="form-grid three-columns extra-fields">
+                  <label class="form-field">
+                    <span>Medicamento <b>*</b></span>
+                    <input [(ngModel)]="detalle.medicamento" name="medicamento" required />
+                  </label>
+                  <label class="form-field">
+                    <span>Dosis <b>*</b></span>
+                    <input [(ngModel)]="detalle.dosis" name="dosis" required />
+                  </label>
+                  <label class="form-field">
+                    <span>Autorizado por <b>*</b></span>
+                    <input
+                      [(ngModel)]="detalle.autorizado_por"
+                      name="autorizadoPor"
+                      required
+                    />
+                  </label>
+                </div>
+              }
+              @case ('ESTADO_ANIMO') {
+                <div class="form-grid two-columns extra-fields">
+                  <label class="form-field">
+                    <span>Estado observado <b>*</b></span>
+                    <select
+                      [(ngModel)]="detalle.estado_animo"
+                      name="estadoAnimo"
+                      required
+                    >
+                      <option value="" disabled>Selecciona</option>
+                      <option value="Feliz">Feliz</option>
+                      <option value="Tranquilo">Tranquilo</option>
+                      <option value="Cansado">Cansado</option>
+                      <option value="Irritable">Irritable</option>
+                      <option value="Triste">Triste</option>
+                    </select>
+                  </label>
+                </div>
+              }
+              @case ('ACTIVIDAD') {
+                <div class="form-grid two-columns extra-fields">
+                  <label class="form-field">
+                    <span>Actividad <b>*</b></span>
+                    <input [(ngModel)]="detalle.actividad" name="actividad" required />
+                  </label>
+                  <label class="form-field">
+                    <span>Participación <b>*</b></span>
+                    <select
+                      [(ngModel)]="detalle.participacion"
+                      name="participacion"
+                      required
+                    >
+                      <option value="" disabled>Selecciona</option>
+                      <option value="Entusiasta">Entusiasta</option>
+                      <option value="Activa">Activa</option>
+                      <option value="Con apoyo">Con apoyo</option>
+                      <option value="Limitada">Limitada</option>
+                      <option value="No participó">No participó</option>
+                    </select>
+                  </label>
+                </div>
+              }
+              @case ('INCIDENTE') {
+                <div class="form-grid two-columns extra-fields">
+                  <label class="form-field">
+                    <span>Zona del cuerpo <b>*</b></span>
+                    <input
+                      [(ngModel)]="detalle.zona_cuerpo"
+                      name="zonaCuerpo"
+                      required
+                    />
+                  </label>
+                  <label class="form-field">
+                    <span>Acción realizada <b>*</b></span>
+                    <input
+                      [(ngModel)]="detalle.accion_realizada"
+                      name="accionRealizada"
+                      required
+                    />
+                  </label>
+                </div>
+              }
+            }
+          </section>
+
+          @if (tipoSeleccionado?.permite_imagen) {
+            <section class="form-section evidence-section" aria-labelledby="evidence-title">
+              <div class="section-heading">
+                <span>03</span>
+                <div>
+                  <h2 id="evidence-title">Evidencia fotográfica</h2>
+                  <p>Adjunta una imagen cuando ayude a documentar el evento.</p>
+                </div>
+              </div>
+              <div class="evidence-field">
+                @if (fotoPreview) {
+                  <img [src]="fotoPreview" alt="Vista previa de la evidencia" />
+                } @else {
+                  <div class="evidence-placeholder">
+                    <span aria-hidden="true">+</span>
+                    <strong>Sin evidencia seleccionada</strong>
+                  </div>
+                }
+                <div>
+                  <p>JPG, PNG o WEBP. Máximo 5 MB.</p>
+                  <div class="evidence-actions">
+                    <input
+                      #fotoInput
+                      id="fotoReporte"
+                      class="file-input"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                      (change)="seleccionarFoto($event)"
+                    />
+                    <label class="select-photo-button" for="fotoReporte">
+                      {{ fotoSeleccionada ? 'Cambiar imagen' : 'Seleccionar imagen' }}
+                    </label>
+                    @if (fotoSeleccionada) {
+                      <button class="discard-photo-button" type="button" (click)="descartarFoto()">
+                        Quitar
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </section>
+          }
+
+          @if (mensajeError) {
+            <p class="form-error" role="alert">{{ mensajeError }}</p>
+          }
+
+          <footer class="form-actions">
+            <button class="primary-button" type="submit" [disabled]="enviando">
+              {{
+                subiendoFoto
+                  ? 'Subiendo evidencia...'
+                  : enviando
+                    ? 'Guardando reporte...'
+                    : 'Registrar reporte'
+              }}
+            </button>
+            <button class="secondary-button" type="button" (click)="volverPerfil()">
+              Cancelar
+            </button>
+          </footer>
+        </form>
+      }
+    }
+  </main>
+</app-shell>

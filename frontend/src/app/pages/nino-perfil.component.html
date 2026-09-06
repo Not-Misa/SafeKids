@@ -1,0 +1,386 @@
+<app-shell active="ninos">
+  <app-nino-profile-nav
+    [idNino]="nino?.id_nino || 0"
+    active="perfil"
+    [ninoActivo]="!nino || nino.estado === 'ACTIVO'"
+  />
+
+  <main class="profile-page">
+    @if (cargando) {
+      <section class="status-view" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h1>Cargando perfil</h1>
+        <p>Estamos consultando la información del niño.</p>
+      </section>
+    } @else if (mensajeError) {
+      <section class="status-view error-view" role="alert">
+        <span class="status-symbol" aria-hidden="true">!</span>
+        <h1>No pudimos abrir este perfil</h1>
+        <p>{{ mensajeError }}</p>
+        <button type="button" (click)="volver()">Regresar al inicio</button>
+      </section>
+    } @else if (nino) {
+      <section class="child-summary">
+        <img
+          class="child-photo"
+          [src]="nino.foto_url || defaultUserImage"
+          [alt]="'Fotografía de ' + nino.nombres"
+        />
+        <div class="child-heading">
+          <span class="eyebrow">Expediente infantil</span>
+          <h1>{{ nino.nombres }} {{ nino.apellidos }}</h1>
+          <p>{{ nino.edad }} años · {{ nombreGenero(nino.genero) }}</p>
+          <div class="summary-badges">
+            <span class="status-badge" [class.inactive]="nino.estado !== 'ACTIVO'">
+              {{ nino.estado }}
+            </span>
+            @if (nino.expediente_medico.alergias) {
+              <span class="allergy-badge">Alergias registradas</span>
+            }
+          </div>
+          @if (puedeAdministrar) {
+            <div class="profile-actions">
+              <a class="edit-button" [routerLink]="['/ninos', nino.id_nino, 'editar']">
+                Editar expediente
+              </a>
+              <button
+                class="state-button"
+                [class.reactivate]="nino.estado !== 'ACTIVO'"
+                type="button"
+                (click)="abrirConfirmacionEstado()"
+              >
+                {{ nino.estado === 'ACTIVO' ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+
+      @if (mensajeAccion) {
+        <p class="action-message" role="status">{{ mensajeAccion }}</p>
+      }
+
+      <section class="profile-section" aria-labelledby="personal-title">
+        <div class="section-heading">
+          <span class="section-number">01</span>
+          <div>
+            <h2 id="personal-title">Información personal</h2>
+            <p>Datos generales de identificación e ingreso.</p>
+          </div>
+        </div>
+
+        <div class="detail-grid detail-grid-four">
+          <div class="detail-field">
+            <span>Nombre completo</span>
+            <strong>{{ nino.nombres }} {{ nino.apellidos }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Fecha de nacimiento</span>
+            <strong>{{ fechaLegible(nino.fecha_nacimiento) }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Edad</span>
+            <strong>{{ nino.edad }} años</strong>
+          </div>
+          <div class="detail-field">
+            <span>Fecha de ingreso</span>
+            <strong>{{ fechaLegible(nino.fecha_ingreso) }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile-section medical-section" aria-labelledby="medical-title">
+        <div class="section-heading">
+          <span class="section-number">02</span>
+          <div>
+            <h2 id="medical-title">Expediente médico</h2>
+          </div>
+        </div>
+
+        @if (nino.expediente_medico.alergias) {
+          <div class="medical-alert">
+            <span aria-hidden="true">!</span>
+            <div>
+              <strong>Alergias</strong>
+              <p>{{ nino.expediente_medico.alergias }}</p>
+            </div>
+          </div>
+        }
+
+        <div class="detail-grid detail-grid-three">
+          <div class="detail-field">
+            <span>Tipo de sangre</span>
+            <strong>{{ textoOValor(nino.expediente_medico.tipo_sangre) }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Padecimientos</span>
+            <strong>{{
+              textoOValor(nino.expediente_medico.padecimientos, 'Ninguno registrado')
+            }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Medicamentos habituales</span>
+            <strong>{{
+              textoOValor(nino.expediente_medico.medicamentos_habituales, 'Ninguno registrado')
+            }}</strong>
+          </div>
+          <div class="detail-field detail-wide">
+            <span>Restricciones alimentarias</span>
+            <strong>{{
+              textoOValor(nino.expediente_medico.restricciones_alimentarias, 'Ninguna registrada')
+            }}</strong>
+          </div>
+          <div class="detail-field detail-wide">
+            <span>Indicaciones de emergencia</span>
+            <strong>{{ textoOValor(nino.expediente_medico.indicaciones_emergencia) }}</strong>
+          </div>
+        </div>
+
+        @if (
+          nino.expediente_medico.medico_nombre ||
+          nino.expediente_medico.medico_telefono ||
+          nino.expediente_medico.institucion_medica
+        ) {
+          <div class="doctor-strip">
+            <div>
+              <span>Médico</span>
+              <strong>{{ textoOValor(nino.expediente_medico.medico_nombre) }}</strong>
+            </div>
+            <div>
+              <span>Teléfono</span>
+              <strong>{{ textoOValor(nino.expediente_medico.medico_telefono) }}</strong>
+            </div>
+            <div>
+              <span>Institución médica</span>
+              <strong>{{ textoOValor(nino.expediente_medico.institucion_medica) }}</strong>
+            </div>
+          </div>
+        }
+      </section>
+
+      <section class="profile-section" aria-labelledby="tutors-title">
+        <div class="section-heading">
+          <span class="section-number">03</span>
+          <div>
+            <h2 id="tutors-title">Padres y tutores</h2>
+          </div>
+        </div>
+
+        @if (nino.tutores.length === 0) {
+          <p class="empty-message">No hay tutores registrados para este niño.</p>
+        } @else {
+          <div class="people-grid">
+            @for (tutor of nino.tutores; track tutor.id_tutor) {
+              <article class="person-card">
+                <header>
+                  <img
+                    [src]="tutor.foto_url || defaultUserImage"
+                    [alt]="tutor.nombres + ' ' + tutor.apellidos"
+                  />
+                  <div>
+                    <span>{{ tutor.parentesco }}</span>
+                    <h3>{{ tutor.nombres }} {{ tutor.apellidos }}</h3>
+                  </div>
+                  @if (tutor.es_principal) {
+                    <small>Principal</small>
+                  }
+                </header>
+                <dl>
+                  <div>
+                    <dt>Teléfono</dt>
+                    <dd>{{ tutor.telefono }}</dd>
+                  </div>
+                  <div>
+                    <dt>Correo</dt>
+                    <dd>{{ tutor.email }}</dd>
+                  </div>
+                  <div class="full-row">
+                    <dt>Dirección</dt>
+                    <dd>{{ textoOValor(tutor.direccion) }}</dd>
+                  </div>
+                </dl>
+                <footer>
+                  @if (tutor.recibe_notificaciones) {
+                    <span>Recibe notificaciones</span>
+                  }
+                  @if (tutor.autorizado_recoger) {
+                    <span>Autorizado para recoger</span>
+                  }
+                  @if (tutor.requiere_cambio_password) {
+                    <span class="password-pending">Cambio de contraseña pendiente</span>
+                  }
+                  @if (puedeAdministrar) {
+                    <button
+                      class="reset-password-button"
+                      type="button"
+                      (click)="abrirRestablecimientoTutor(tutor)"
+                    >
+                      Restablecer contraseña
+                    </button>
+                  }
+                </footer>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="profile-section" aria-labelledby="contacts-title">
+        <div class="section-heading">
+          <span class="section-number">04</span>
+          <div>
+            <h2 id="contacts-title">Contactos autorizados</h2>
+            <p>Red de apoyo disponible para emergencias y entrega del niño.</p>
+          </div>
+        </div>
+
+        @if (nino.contactos_autorizados.length === 0) {
+          <p class="empty-message">No hay contactos adicionales registrados.</p>
+        } @else {
+          <div class="people-grid">
+            @for (contacto of nino.contactos_autorizados; track contacto.id_contacto) {
+              <article class="person-card contact-card">
+                <header>
+                  <img
+                    [src]="contacto.foto_url || defaultUserImage"
+                    [alt]="contacto.nombres + ' ' + contacto.apellidos"
+                  />
+                  <div>
+                    <span>{{ contacto.parentesco || 'Contacto autorizado' }}</span>
+                    <h3>{{ contacto.nombres }} {{ contacto.apellidos }}</h3>
+                  </div>
+                </header>
+                <dl>
+                  <div>
+                    <dt>Teléfono</dt>
+                    <dd>{{ contacto.telefono }}</dd>
+                  </div>
+                  <div>
+                    <dt>Correo</dt>
+                    <dd>{{ textoOValor(contacto.email) }}</dd>
+                  </div>
+                </dl>
+                <footer>
+                  @if (contacto.es_contacto_emergencia) {
+                    <span>Contacto de emergencia</span>
+                  }
+                  @if (contacto.autorizado_recoger) {
+                    <span>Autorizado para recoger</span>
+                  }
+                </footer>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      @if (mostrarConfirmacionEstado) {
+        <div class="dialog-backdrop" role="presentation" (click)="cerrarConfirmacionEstado()">
+          <section
+            class="confirmation-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="state-dialog-title"
+            (click)="$event.stopPropagation()"
+          >
+            <span class="dialog-symbol" aria-hidden="true">!</span>
+            <h2 id="state-dialog-title">
+              {{ nino.estado === 'ACTIVO' ? 'Dar de baja al niño' : 'Reactivar al niño' }}
+            </h2>
+            <p>
+              @if (nino.estado === 'ACTIVO') {
+                El perfil dejará de aparecer como activo, pero conservará todo su historial.
+              } @else {
+                El perfil volverá a estar disponible para las operaciones cotidianas.
+              }
+            </p>
+            @if (mensajeAccion) {
+              <p class="dialog-error" role="alert">{{ mensajeAccion }}</p>
+            }
+            <div>
+              <button
+                class="confirm-state-button"
+                type="button"
+                [disabled]="cambiandoEstado"
+                (click)="cambiarEstado()"
+              >
+                {{ cambiandoEstado ? 'Procesando...' : 'Confirmar' }}
+              </button>
+              <button
+                class="cancel-dialog-button"
+                type="button"
+                [disabled]="cambiandoEstado"
+                (click)="cerrarConfirmacionEstado()"
+              >
+                Cancelar
+              </button>
+            </div>
+          </section>
+        </div>
+      }
+
+      @if (mostrarRestablecimientoTutor && tutorObjetivo) {
+        <div class="dialog-backdrop" role="presentation" (click)="cerrarRestablecimientoTutor()">
+          <section
+            class="confirmation-dialog password-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tutor-password-title"
+            (click)="$event.stopPropagation()"
+          >
+            @if (credencialTemporal) {
+              <span class="dialog-symbol success-symbol" aria-hidden="true">✓</span>
+              <h2 id="tutor-password-title">Contraseña temporal generada</h2>
+              <p>Entrégala únicamente a {{ tutorObjetivo.nombres }}.</p>
+              <div class="temporary-credential">
+                <span>Correo</span>
+                <strong>{{ credencialTemporal.email }}</strong>
+                <span>Contraseña temporal</span>
+                <code>{{ credencialTemporal.password_temporal }}</code>
+              </div>
+              @if (mensajePassword) {
+                <p class="password-message" role="status">{{ mensajePassword }}</p>
+              }
+              <div>
+                <button class="confirm-state-button" type="button" (click)="copiarCredencialTutor()">
+                  Copiar credencial
+                </button>
+                <button class="cancel-dialog-button" type="button" (click)="cerrarRestablecimientoTutor()">
+                  Cerrar
+                </button>
+              </div>
+            } @else {
+              <span class="dialog-symbol" aria-hidden="true">!</span>
+              <h2 id="tutor-password-title">Restablecer contraseña</h2>
+              <p>
+                Se cerrarán las sesiones de {{ tutorObjetivo.nombres }} y la contraseña anterior
+                dejará de funcionar.
+              </p>
+              @if (mensajePassword) {
+                <p class="dialog-error" role="alert">{{ mensajePassword }}</p>
+              }
+              <div>
+                <button
+                  class="confirm-state-button"
+                  type="button"
+                  [disabled]="restableciendoPassword"
+                  (click)="restablecerPasswordTutor()"
+                >
+                  {{ restableciendoPassword ? 'Generando...' : 'Confirmar' }}
+                </button>
+                <button
+                  class="cancel-dialog-button"
+                  type="button"
+                  [disabled]="restableciendoPassword"
+                  (click)="cerrarRestablecimientoTutor()"
+                >
+                  Cancelar
+                </button>
+              </div>
+            }
+          </section>
+        </div>
+      }
+    }
+  </main>
+</app-shell>

@@ -1,0 +1,344 @@
+<app-shell active="ninos">
+  <app-nino-profile-nav
+    [idNino]="idNino"
+    active="notificaciones"
+    [ninoActivo]="!nino || nino.estado === 'ACTIVO'"
+  />
+
+  <main class="personal-history-page">
+    <header class="personal-heading">
+      <div>
+        <span>Comunicación con tutores</span>
+        <h1>Historial de notificaciones</h1>
+        @if (nino) {
+          <p>
+            Mensajes enviados a los tutores de
+            <strong>{{ nino.nombres }} {{ nino.apellidos }}</strong>.
+          </p>
+        } @else {
+          <p>Consulta los mensajes personales enviados desde el expediente.</p>
+        }
+      </div>
+
+      @if (!nino || nino.estado === 'ACTIVO') {
+        <button class="new-notification-button" type="button" (click)="nuevaNotificacion()">
+          <img src="assets/icons/plus.svg" alt="" />
+          Nueva notificación
+        </button>
+      }
+    </header>
+
+    <form
+      class="personal-tools"
+      (ngSubmit)="cargarNotificaciones()"
+      aria-label="Filtros del historial"
+    >
+      <label class="search-field">
+        <span>Buscar</span>
+        <div>
+          <img src="assets/icons/search.svg" alt="" />
+          <input
+            [(ngModel)]="buscar"
+            name="buscar"
+            maxlength="100"
+            placeholder="Asunto, contenido o empleado"
+          />
+        </div>
+      </label>
+
+      <label>
+        <span>Tipo</span>
+        <select [(ngModel)]="tipo" name="tipo">
+          <option value="TODOS">Todos</option>
+          @for (opcion of tipos; track opcion.codigo) {
+            <option [value]="opcion.codigo">{{ opcion.nombre }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Prioridad</span>
+        <select [(ngModel)]="prioridad" name="prioridad">
+          <option value="TODAS">Todas</option>
+          <option value="NORMAL">Normal</option>
+          <option value="IMPORTANTE">Importante</option>
+          <option value="URGENTE">Urgente</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Desde</span>
+        <input
+          [(ngModel)]="fechaDesde"
+          name="fechaDesde"
+          type="date"
+          [max]="fechaHasta || fechaMaxima"
+        />
+      </label>
+
+      <label>
+        <span>Hasta</span>
+        <input
+          [(ngModel)]="fechaHasta"
+          name="fechaHasta"
+          type="date"
+          [min]="fechaDesde"
+          [max]="fechaMaxima"
+        />
+      </label>
+
+      <button class="filter-button" type="submit">Aplicar</button>
+      <button class="clear-button" type="button" (click)="limpiarFiltros()">
+        Restablecer
+      </button>
+    </form>
+
+    @if (!cargando && !mensajeError && notificaciones.length > 0) {
+      <section class="personal-summary" aria-label="Resumen del historial">
+        <div>
+          <strong>{{ notificaciones.length }}</strong>
+          <span>Notificaciones</span>
+        </div>
+        <div>
+          <strong>{{ totalDestinatarios }}</strong>
+          <span>Envíos a tutores</span>
+        </div>
+        <div>
+          <strong>{{ totalVistos }}</strong>
+          <span>Lecturas</span>
+        </div>
+        <div>
+          <strong>{{ totalConfirmados }}</strong>
+          <span>Confirmaciones</span>
+        </div>
+      </section>
+    }
+
+    @if (cargando) {
+      <section class="personal-status" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h2>Cargando notificaciones...</h2>
+        <p>Estamos consultando la comunicación del periodo seleccionado.</p>
+      </section>
+    } @else if (mensajeError) {
+      <section class="personal-status error" role="alert">
+        <img src="assets/icons/info-circle.svg" alt="" />
+        <h2>No pudimos consultar el historial</h2>
+        <p>{{ mensajeError }}</p>
+        <button type="button" (click)="cargarNotificaciones()">Intentar de nuevo</button>
+      </section>
+    } @else if (notificaciones.length === 0) {
+      <section class="personal-status">
+        <img src="assets/icons/bell.svg" alt="" />
+        <h2>No hay notificaciones con estos filtros</h2>
+        <p>Prueba con otro periodo o envía el primer mensaje personal.</p>
+        @if (!nino || nino.estado === 'ACTIVO') {
+          <button type="button" (click)="nuevaNotificacion()">
+            Nueva notificación
+          </button>
+        }
+      </section>
+    } @else {
+      <section class="personal-timeline" aria-label="Notificaciones personales">
+        @for (grupo of gruposNotificaciones; track grupo.fecha) {
+          <h2 class="date-heading">{{ grupo.etiqueta }}</h2>
+
+          @for (notificacion of grupo.notificaciones; track notificacion.id_notificacion) {
+            <article
+              class="personal-item"
+              [class.importante]="notificacion.prioridad === 'IMPORTANTE'"
+              [class.urgente]="notificacion.prioridad === 'URGENTE'"
+              role="button"
+              tabindex="0"
+              (click)="abrirNotificacion(notificacion)"
+              (keydown.enter)="abrirNotificacion(notificacion)"
+              (keydown.space)="$event.preventDefault(); abrirNotificacion(notificacion)"
+            >
+              <div class="personal-marker">
+                <img src="assets/icons/bell.svg" alt="" />
+              </div>
+
+              <div class="personal-content">
+                <header>
+                  <div>
+                    <span class="personal-type">{{ notificacion.tipo.nombre }}</span>
+                    <h3>{{ notificacion.titulo }}</h3>
+                  </div>
+
+                  <div class="personal-meta">
+                    <span
+                      class="priority-badge"
+                      [class]="clasePrioridad(notificacion.prioridad)"
+                    >
+                      {{ etiquetaPrioridad(notificacion.prioridad) }}
+                    </span>
+                    <time [attr.datetime]="notificacion.publicada_en">
+                      {{ formatearHora(notificacion.publicada_en) }}
+                    </time>
+                  </div>
+                </header>
+
+                <div class="personal-description-row">
+                  <p>{{ notificacion.mensaje }}</p>
+                  @if (notificacion.imagen_url) {
+                    <div class="attachment-indicator" aria-hidden="true">
+                      <img src="assets/icons/photo.svg" alt="" />
+                      <span>Abrir</span>
+                    </div>
+                  }
+                </div>
+
+                <footer>
+                  <div class="author">
+                    <img
+                      [src]="notificacion.empleado.foto_url || defaultUserImage"
+                      [alt]="notificacion.empleado.nombres"
+                    />
+                    <span>
+                      Enviada por
+                      <strong>
+                        {{ notificacion.empleado.nombres }}
+                        {{ notificacion.empleado.apellidos }}
+                      </strong>
+                    </span>
+                  </div>
+
+                  <dl class="delivery-stats">
+                    <div>
+                      <dt>Tutores</dt>
+                      <dd>{{ notificacion.entrega.destinatarios }}</dd>
+                    </div>
+                    <div>
+                      <dt>Push</dt>
+                      <dd>{{ notificacion.entrega.push_enviados }}</dd>
+                    </div>
+                    <div>
+                      <dt>Vistos</dt>
+                      <dd>{{ notificacion.entrega.vistos }}</dd>
+                    </div>
+                    @if (notificacion.requiere_confirmacion) {
+                      <div>
+                        <dt>Confirmados</dt>
+                        <dd>{{ notificacion.entrega.confirmados }}</dd>
+                      </div>
+                    }
+                  </dl>
+                </footer>
+              </div>
+            </article>
+          }
+        }
+      </section>
+    }
+  </main>
+
+  @if (notificacionSeleccionada; as detalle) {
+    <div class="personal-dialog-backdrop" (click)="cerrarNotificacion()">
+      <section
+        class="personal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="personal-dialog-title"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="personal-dialog-heading">
+          <div>
+            <span>{{ detalle.tipo.nombre }}</span>
+            <h2 id="personal-dialog-title">{{ detalle.titulo }}</h2>
+          </div>
+          <button
+            type="button"
+            aria-label="Cerrar detalle"
+            title="Cerrar"
+            (click)="cerrarNotificacion()"
+          >
+            &times;
+          </button>
+        </header>
+
+        <div class="personal-dialog-meta">
+          <span class="priority-badge" [class]="clasePrioridad(detalle.prioridad)">
+            {{ etiquetaPrioridad(detalle.prioridad) }}
+          </span>
+          <span>Notificación personal</span>
+          <time [attr.datetime]="detalle.publicada_en">
+            {{ formatearFecha(detalle.publicada_en.slice(0, 10)) }},
+            {{ formatearHora(detalle.publicada_en) }}
+          </time>
+        </div>
+
+        <p class="personal-dialog-message">{{ detalle.mensaje }}</p>
+
+        @if (detalle.imagen_url) {
+          <figure class="personal-dialog-image">
+            <img
+              [src]="detalle.imagen_url"
+              [alt]="'Imagen adjunta de ' + detalle.titulo"
+            />
+          </figure>
+        }
+
+        <section class="recipient-section" aria-labelledby="recipient-title">
+          <header>
+            <div>
+              <span>Seguimiento de entrega</span>
+              <h3 id="recipient-title">Tutores destinatarios</h3>
+            </div>
+            <strong>{{ detalle.destinatarios.length }}</strong>
+          </header>
+
+          <div class="recipient-list">
+            @for (destinatario of detalle.destinatarios; track destinatario.id_destinatario) {
+              <article class="recipient-row">
+                <img
+                  [src]="destinatario.foto_url || defaultUserImage"
+                  [alt]="nombreTutor(destinatario)"
+                />
+                <div class="recipient-detail">
+                  <strong>{{ nombreTutor(destinatario) }}</strong>
+                  <div class="recipient-statuses">
+                    <span [class.success]="destinatario.enviada_push">
+                      {{ destinatario.enviada_push ? 'Push enviado' : 'Push no enviado' }}
+                    </span>
+                    <span [class.success]="destinatario.vista">
+                      {{ destinatario.vista ? 'Vista' : 'Sin leer' }}
+                    </span>
+                    @if (detalle.requiere_confirmacion) {
+                      <span [class.success]="destinatario.confirmada">
+                        {{ destinatario.confirmada ? 'Confirmada' : 'Sin confirmar' }}
+                      </span>
+                    }
+                  </div>
+                  @if (destinatario.vista_en) {
+                    <small>Vista: {{ formatearMomento(destinatario.vista_en) }}</small>
+                  }
+                  @if (destinatario.respuesta) {
+                    <p><strong>Respuesta:</strong> {{ destinatario.respuesta }}</p>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+
+        <footer class="personal-dialog-footer">
+          <div class="author">
+            <img
+              [src]="detalle.empleado.foto_url || defaultUserImage"
+              [alt]="detalle.empleado.nombres"
+            />
+            <span>
+              Enviada por
+              <strong>
+                {{ detalle.empleado.nombres }} {{ detalle.empleado.apellidos }}
+              </strong>
+            </span>
+          </div>
+          <span>
+            {{ detalle.requiere_confirmacion ? 'Requiere confirmación' : 'Solo informativa' }}
+          </span>
+        </footer>
+      </section>
+    </div>
+  }
+</app-shell>

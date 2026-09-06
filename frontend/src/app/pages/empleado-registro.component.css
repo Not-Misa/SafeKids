@@ -1,0 +1,506 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--sk-bg);
+}
+
+.employee-form-page {
+  width: min(1040px, calc(100% - 64px));
+  margin: 0 auto;
+  padding: 34px 0 72px;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin-bottom: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #56667b;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.back-button span {
+  color: var(--sk-blue);
+  font-size: 1.35rem;
+}
+
+.form-heading {
+  margin-bottom: 28px;
+}
+
+.form-heading > span {
+  color: var(--sk-blue);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.form-heading h1 {
+  margin: 7px 0 5px;
+  color: #172033;
+  font-size: 2.35rem;
+}
+
+.form-heading p {
+  margin: 0;
+  color: #65748a;
+}
+
+.employee-form,
+.success-view,
+.status-view {
+  border: 1px solid #dfe6ef;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--sk-shadow);
+  animation: form-enter 300ms ease both;
+}
+
+.employee-form {
+  padding: 0 42px;
+}
+
+.form-section {
+  padding: 36px 0;
+  border-bottom: 1px solid #dfe6ee;
+}
+
+.section-heading {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: start;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.section-heading > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 34px;
+  border-radius: 6px;
+  background: #e1efff;
+  color: var(--sk-blue);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.section-heading h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.35rem;
+}
+
+.section-heading p {
+  margin: 4px 0 0;
+  color: #718096;
+}
+
+.photo-field {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px dashed #cdd8e5;
+}
+
+.photo-preview {
+  position: relative;
+  width: 116px;
+  height: 116px;
+}
+
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #dbeaff;
+  border-radius: 50%;
+  background: #edf2f7;
+  object-fit: cover;
+}
+
+.photo-preview span {
+  position: absolute;
+  right: -8px;
+  bottom: 4px;
+  padding: 5px 7px;
+  border-radius: 5px;
+  background: #168052;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.photo-controls h3 {
+  margin: 0;
+  color: #253247;
+  font-size: 1rem;
+}
+
+.photo-controls p {
+  margin: 6px 0 14px;
+  color: #718096;
+  font-size: 0.86rem;
+}
+
+.photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.photo-select-button,
+.photo-discard-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.photo-select-button {
+  border: 1px solid #bcd5f4;
+  background: #edf5ff;
+  color: #2868b9;
+}
+
+.photo-discard-button {
+  border: 1px solid #d3dce7;
+  background: #fff;
+  color: #526176;
+}
+
+.photo-select-button:hover,
+.photo-discard-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(25, 58, 97, 0.1);
+}
+
+.file-input:focus-visible + .photo-select-button,
+.photo-discard-button:focus-visible {
+  outline: 3px solid rgba(50, 130, 235, 0.2);
+  outline-offset: 2px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 22px 24px;
+}
+
+.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.form-field > span {
+  color: #344256;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.form-field b {
+  color: var(--sk-red);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #d3dce7;
+  border-radius: 6px;
+  outline: 0;
+  background: #fff;
+  color: #172033;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.form-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--sk-blue);
+  box-shadow: 0 0 0 3px rgba(50, 130, 235, 0.12);
+}
+
+.form-field input.ng-invalid.ng-touched,
+.form-field select.ng-invalid.ng-touched {
+  border-color: var(--sk-red);
+}
+
+.form-field small {
+  color: #718096;
+  font-size: 0.75rem;
+}
+
+.full-field {
+  grid-column: 1 / -1;
+}
+
+.form-error,
+.success-warning {
+  padding: 14px 16px;
+  border-radius: 6px;
+  font-weight: 750;
+}
+
+.form-error {
+  margin: 26px 0 0;
+  background: #fff0f1;
+  color: #b12c3a;
+}
+
+.success-warning {
+  width: min(680px, 100%);
+  margin-top: 18px;
+  border: 1px solid #f1d38b;
+  background: #fff8e7;
+  color: #805c0c;
+}
+
+.form-actions,
+.success-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.form-actions {
+  padding: 32px 0 38px;
+}
+
+.success-actions {
+  margin-top: 28px;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 6px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+  background: var(--sk-blue);
+  color: #fff;
+}
+
+.primary-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.secondary-button {
+  border: 1px solid #d3dce7;
+  background: #fff;
+  color: #526176;
+}
+
+.success-view,
+.status-view {
+  min-height: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 46px;
+  color: #65748a;
+  text-align: center;
+}
+
+.success-view h1,
+.status-view h1 {
+  margin: 18px 0 7px;
+  color: #172033;
+}
+
+.success-view > p,
+.status-view > p {
+  margin: 0;
+}
+
+.success-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #e1f6ea;
+  color: #168052;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.credential-panel {
+  width: min(680px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 26px;
+  padding: 20px;
+  border: 1px solid #d7e3ef;
+  border-radius: 7px;
+  background: #f7faff;
+  text-align: left;
+}
+
+.credential-panel div {
+  display: grid;
+  gap: 5px;
+}
+
+.credential-panel span {
+  color: #718096;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.credential-panel strong,
+.credential-panel code {
+  color: #253247;
+  overflow-wrap: anywhere;
+}
+
+.credential-panel code {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.credential-panel p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #6f7d91;
+  font-size: 0.82rem;
+}
+
+.loader {
+  width: 42px;
+  height: 42px;
+  border: 4px solid #dceafd;
+  border-top-color: var(--sk-blue);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 680px) {
+  .employee-form-page {
+    width: calc(100% - 28px);
+    padding-top: 24px;
+  }
+
+  .form-heading h1 {
+    font-size: 1.9rem;
+  }
+
+  .employee-form {
+    padding: 0 20px;
+  }
+
+  .two-columns,
+  .photo-field,
+  .credential-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .full-field,
+  .credential-panel p {
+    grid-column: auto;
+  }
+
+  .photo-preview {
+    width: 104px;
+    height: 104px;
+  }
+
+  .form-actions,
+  .success-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button,
+  .success-actions button {
+    width: 100%;
+  }
+
+  .success-view,
+  .status-view {
+    padding: 34px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .employee-form,
+  .success-view,
+  .status-view,
+  .loader {
+    animation: none;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea,
+  .photo-select-button,
+  .photo-discard-button {
+    transition: none;
+  }
+}

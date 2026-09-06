@@ -1,0 +1,446 @@
+<app-shell active="ninos">
+  <main class="registration-page">
+    <button class="back-button" type="button" (click)="volverAlListado()">
+      <span aria-hidden="true">←</span>
+      {{ modoEdicion ? 'Volver al perfil' : 'Volver al listado' }}
+    </button>
+
+    @if (cargandoDatos) {
+      <section class="loading-view" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h1>Cargando expediente</h1>
+        <p>Estamos preparando los datos para su edición.</p>
+      </section>
+    } @else if (idNinoCreado) {
+      <section class="success-view" role="status">
+        <span class="success-symbol" aria-hidden="true">✓</span>
+        <h1>{{ modoEdicion ? 'Cambios guardados' : 'Registro completado' }}</h1>
+        <p>
+          {{
+            modoEdicion
+              ? 'El expediente y sus relaciones fueron actualizados correctamente.'
+              : 'El expediente infantil y sus relaciones fueron guardados correctamente.'
+          }}
+        </p>
+
+        @if (mensajeAdvertencia) {
+          <p class="success-warning" role="alert">{{ mensajeAdvertencia }}</p>
+        }
+
+        @if (credencialesNuevas.length > 0) {
+          <div class="credentials-panel">
+            <h2>Credenciales temporales</h2>
+            <p>Entrega cada acceso únicamente al tutor correspondiente.</p>
+            @for (credencial of credencialesNuevas; track credencial.email) {
+              <div class="credential-row">
+                <strong>{{ credencial.nombre }}</strong>
+                <span>{{ credencial.email }}</span>
+                <code>{{ credencial.password_temporal }}</code>
+              </div>
+            }
+          </div>
+        } @else if (!modoEdicion) {
+          <p class="existing-account-note">
+            Los tutores ya tenían una cuenta y fueron vinculados con este niño.
+          </p>
+        }
+
+        <div class="success-actions">
+          <button class="primary-button" type="button" (click)="verPerfil()">Ver perfil</button>
+          @if (!modoEdicion) {
+            <button class="secondary-button" type="button" (click)="registrarHermano()">
+              Registrar hermano
+            </button>
+            <button class="tertiary-button" type="button" (click)="registrarOtro()">
+              Registrar otro niño
+            </button>
+          }
+        </div>
+      </section>
+    } @else {
+      <header class="registration-heading">
+        <span>{{ modoEdicion ? 'Actualizar expediente' : 'Nuevo expediente' }}</span>
+        <h1>{{ modoEdicion ? 'Editar niño' : 'Registrar niño' }}</h1>
+        <p>
+          {{
+            modoEdicion
+              ? 'Actualiza los datos del niño y de las personas responsables.'
+              : 'Completa los datos del niño y de las personas responsables.'
+          }}
+        </p>
+      </header>
+
+      <form #registroForm="ngForm" class="registration-form" (ngSubmit)="guardar(registroForm)">
+        <section class="form-section" aria-labelledby="child-data-title">
+          <div class="section-heading">
+            <span>01</span>
+            <div>
+              <h2 id="child-data-title">Datos del niño</h2>
+              <p>Información personal y de ingreso a la guardería.</p>
+            </div>
+          </div>
+
+          <div class="photo-field">
+            <div class="photo-preview">
+              <img
+                [src]="fotoPreview"
+                [alt]="nino.nombres ? 'Fotografia de ' + nino.nombres : 'Vista previa de la fotografia'"
+              />
+              @if (fotoSeleccionada) {
+                <span>Nueva foto</span>
+              }
+            </div>
+            <div class="photo-controls">
+              <h3>Fotografía de perfil</h3>
+              <p id="photo-help">
+                JPG, PNG o WEBP, hasta 5 MB. La imagen se ajustará a un formato
+                cuadrado de 600 x 600 px.
+              </p>
+              <div class="photo-actions">
+                <input
+                  #fotoInput
+                  id="fotoNino"
+                  class="file-input"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                  aria-describedby="photo-help"
+                  (change)="seleccionarFoto($event)"
+                />
+                <label class="photo-select-button" for="fotoNino">
+                  {{ fotoActualUrl || fotoSeleccionada ? 'Cambiar foto' : 'Seleccionar foto' }}
+                </label>
+                @if (fotoSeleccionada) {
+                  <button
+                    class="photo-discard-button"
+                    type="button"
+                    (click)="descartarFotoSeleccionada()"
+                  >
+                    Descartar cambio
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid three-columns">
+            <label class="form-field">
+              <span>Nombres <b>*</b></span>
+              <input [(ngModel)]="nino.nombres" name="ninoNombres" maxlength="100" required />
+            </label>
+            <label class="form-field">
+              <span>Apellidos <b>*</b></span>
+              <input [(ngModel)]="nino.apellidos" name="ninoApellidos" maxlength="120" required />
+            </label>
+            <label class="form-field">
+              <span>Fecha de nacimiento <b>*</b></span>
+              <input
+                type="date"
+                [(ngModel)]="nino.fecha_nacimiento"
+                name="fechaNacimiento"
+                [max]="fechaMaxima"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span>Género <b>*</b></span>
+              <select [(ngModel)]="nino.genero" name="genero" required>
+                <option value="NO_ESPECIFICADO">No especificado</option>
+                <option value="FEMENINO">Femenino</option>
+                <option value="MASCULINO">Masculino</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span>Fecha de ingreso</span>
+              <input type="date" [(ngModel)]="nino.fecha_ingreso" name="fechaIngreso" />
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="medical-title">
+          <div class="section-heading">
+            <span>02</span>
+            <div>
+              <h2 id="medical-title">Expediente médico</h2>
+              <p>Datos necesarios para la atención cotidiana y emergencias.</p>
+            </div>
+          </div>
+
+          <div class="form-grid three-columns">
+            <label class="form-field">
+              <span>Tipo de sangre</span>
+              <input [(ngModel)]="expediente.tipo_sangre" name="tipoSangre" maxlength="5" placeholder="Ej. O+" />
+            </label>
+            <label class="form-field wide-field">
+              <span>Alergias</span>
+              <input [(ngModel)]="expediente.alergias" name="alergias" placeholder="Alimentos, medicamentos u otras..." />
+            </label>
+            <label class="form-field">
+              <span>Padecimientos</span>
+              <input [(ngModel)]="expediente.padecimientos" name="padecimientos" />
+            </label>
+            <label class="form-field">
+              <span>Medicamentos habituales</span>
+              <input [(ngModel)]="expediente.medicamentos_habituales" name="medicamentos" />
+            </label>
+            <label class="form-field">
+              <span>Restricciones alimentarias</span>
+              <input [(ngModel)]="expediente.restricciones_alimentarias" name="restricciones" />
+            </label>
+            <label class="form-field">
+              <span>Nombre del médico</span>
+              <input [(ngModel)]="expediente.medico_nombre" name="medicoNombre" />
+            </label>
+            <label class="form-field">
+              <span>Teléfono del médico</span>
+              <input [(ngModel)]="expediente.medico_telefono" name="medicoTelefono" maxlength="20" />
+            </label>
+            <label class="form-field">
+              <span>Institución médica</span>
+              <input [(ngModel)]="expediente.institucion_medica" name="institucionMedica" />
+            </label>
+            <label class="form-field">
+              <span>Número de seguro</span>
+              <input [(ngModel)]="expediente.numero_seguro" name="numeroSeguro" />
+            </label>
+            <label class="form-field wide-field">
+              <span>Indicaciones de emergencia</span>
+              <textarea [(ngModel)]="expediente.indicaciones_emergencia" name="indicaciones"></textarea>
+            </label>
+            <label class="form-field wide-field">
+              <span>Observaciones médicas</span>
+              <textarea [(ngModel)]="expediente.observaciones" name="observacionesMedicas"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="tutors-title">
+          <div class="section-heading section-heading-actions">
+            <span>03</span>
+            <div>
+              <h2 id="tutors-title">Padres o tutores</h2>
+              <p>El primer tutor se considera el contacto principal.</p>
+            </div>
+            @if (tutores.length < 2) {
+              <button class="add-row-button" type="button" (click)="agregarTutor()">
+                <span aria-hidden="true">+</span>
+                Agregar segundo tutor
+              </button>
+            }
+          </div>
+
+          @for (tutor of tutores; track $index; let i = $index) {
+            <fieldset class="repeat-section">
+              <legend>
+                <span>Tutor {{ i + 1 }}{{ i === 0 ? ' · Principal' : '' }}</span>
+                @if (i > 0) {
+                  <button
+                    class="remove-button"
+                    type="button"
+                    title="Quitar tutor"
+                    aria-label="Quitar segundo tutor"
+                    (click)="eliminarTutor(i)"
+                  >
+                    ×
+                  </button>
+                }
+              </legend>
+
+              @if (!modoEdicion) {
+                <div class="tutor-mode-switch" role="group" [attr.aria-label]="'Tipo de tutor ' + (i + 1)">
+                  <button type="button" [class.active]="tutor.modo === 'NUEVO'" [attr.aria-pressed]="tutor.modo === 'NUEVO'" (click)="cambiarModoTutor(i, 'NUEVO')">Tutor nuevo</button>
+                  <button type="button" [class.active]="tutor.modo === 'EXISTENTE'" [attr.aria-pressed]="tutor.modo === 'EXISTENTE'" (click)="cambiarModoTutor(i, 'EXISTENTE')">Vincular tutor existente</button>
+                </div>
+              }
+
+              @if (modoEdicion || tutor.modo === 'NUEVO') {
+              <div class="form-grid three-columns">
+                <label class="form-field">
+                  <span>Nombres <b>*</b></span>
+                  <input [(ngModel)]="tutor.nombres" [name]="'tutorNombres' + i" required />
+                </label>
+                <label class="form-field">
+                  <span>Apellidos <b>*</b></span>
+                  <input [(ngModel)]="tutor.apellidos" [name]="'tutorApellidos' + i" required />
+                </label>
+                <label class="form-field">
+                  <span>Parentesco <b>*</b></span>
+                  <input [(ngModel)]="tutor.parentesco" [name]="'parentesco' + i" placeholder="Madre, padre, tutor..." required />
+                </label>
+                <label class="form-field">
+                  <span>Correo de acceso <b>*</b></span>
+                  <input type="email" [(ngModel)]="tutor.email" [name]="'tutorEmail' + i" required />
+                </label>
+                <label class="form-field">
+                  <span>Teléfono <b>*</b></span>
+                  <input [(ngModel)]="tutor.telefono" [name]="'tutorTelefono' + i" maxlength="20" required />
+                </label>
+                <label class="form-field">
+                  <span>Teléfono alterno</span>
+                  <input [(ngModel)]="tutor.telefono_alterno" [name]="'tutorTelefonoAlterno' + i" maxlength="20" />
+                </label>
+                <label class="form-field full-field">
+                  <span>Dirección</span>
+                  <input [(ngModel)]="tutor.direccion" [name]="'tutorDireccion' + i" />
+                </label>
+              </div>
+              } @else {
+                <div class="existing-tutor-flow">
+                  @if (tutor.id_tutor) {
+                    <div class="selected-tutor">
+                      <span class="selected-avatar" aria-hidden="true">{{ tutor.nombres.charAt(0) }}{{ tutor.apellidos.charAt(0) }}</span>
+                      <div>
+                        <strong>{{ tutor.nombres }} {{ tutor.apellidos }}</strong>
+                        <span>{{ tutor.email }}</span>
+                        <small>{{ tutor.telefono }}</small>
+                      </div>
+                      <button type="button" (click)="quitarTutorSeleccionado(i)">Cambiar</button>
+                    </div>
+                    <label class="form-field relationship-field">
+                      <span>Parentesco con este niño <b>*</b></span>
+                      <input [(ngModel)]="tutor.parentesco" [name]="'parentescoExistente' + i" placeholder="Madre, padre, tutor..." required />
+                    </label>
+                  } @else {
+                    <div class="tutor-search-heading">
+                      <strong>Buscar una cuenta existente</strong>
+                      <span>Consulta por nombre, correo o teléfono.</span>
+                    </div>
+                    <div class="tutor-search-row">
+                      <input type="search" [(ngModel)]="tutor.busqueda" [name]="'buscarTutor' + i" placeholder="Ej. maria@email.com" autocomplete="off" (keydown.enter)="$event.preventDefault(); buscarTutores(i)" />
+                      <button type="button" [disabled]="tutor.buscando" (click)="buscarTutores(i)">{{ tutor.buscando ? 'Buscando...' : 'Buscar' }}</button>
+                    </div>
+                    @if (tutor.mensaje_busqueda) {
+                      <p class="search-message">{{ tutor.mensaje_busqueda }}</p>
+                    }
+                    @if (tutor.resultados.length > 0) {
+                      <div class="tutor-results" aria-label="Resultados de tutores">
+                        @for (resultado of tutor.resultados; track resultado.id_tutor) {
+                          <button type="button" (click)="seleccionarTutor(i, resultado)">
+                            <span class="result-avatar" aria-hidden="true">{{ resultado.nombres.charAt(0) }}{{ resultado.apellidos.charAt(0) }}</span>
+                            <span><strong>{{ resultado.nombres }} {{ resultado.apellidos }}</strong><small>{{ resultado.email }} · {{ resultado.telefono }}</small></span>
+                            <em>{{ resultado.cantidad_hijos || 0 }} {{ (resultado.cantidad_hijos || 0) === 1 ? 'hijo' : 'hijos' }}</em>
+                          </button>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              }
+
+              @if (modoEdicion || tutor.modo === 'NUEVO' || tutor.id_tutor) {
+              <div class="checkbox-row">
+                <label>
+                  <input type="checkbox" [(ngModel)]="tutor.recibe_notificaciones" [name]="'recibeNotificaciones' + i" />
+                  Recibe notificaciones
+                </label>
+                <label>
+                  <input type="checkbox" [(ngModel)]="tutor.autorizado_recoger" [name]="'tutorAutorizado' + i" />
+                  Autorizado para recoger
+                </label>
+              </div>
+              }
+            </fieldset>
+          }
+        </section>
+
+        <section class="form-section" aria-labelledby="contacts-title">
+          <div class="section-heading section-heading-actions">
+            <span>04</span>
+            <div>
+              <h2 id="contacts-title">Contactos autorizados</h2>
+              <p>Personas adicionales disponibles en caso de emergencia.</p>
+            </div>
+            @if (contactos.length < 2) {
+              <button class="add-row-button" type="button" (click)="agregarContacto()">
+                <span aria-hidden="true">+</span>
+                Agregar contacto
+              </button>
+            }
+          </div>
+
+          @if (contactos.length === 0) {
+            <p class="optional-empty">No se registrarán contactos adicionales.</p>
+          }
+
+          @for (contacto of contactos; track $index; let i = $index) {
+            <fieldset class="repeat-section">
+              <legend>
+                <span>Contacto {{ i + 1 }}</span>
+                <button
+                  class="remove-button"
+                  type="button"
+                  title="Quitar contacto"
+                  [attr.aria-label]="'Quitar contacto ' + (i + 1)"
+                  (click)="eliminarContacto(i)"
+                >
+                  ×
+                </button>
+              </legend>
+
+              <div class="form-grid three-columns">
+                <label class="form-field">
+                  <span>Nombres <b>*</b></span>
+                  <input [(ngModel)]="contacto.nombres" [name]="'contactoNombres' + i" required />
+                </label>
+                <label class="form-field">
+                  <span>Apellidos <b>*</b></span>
+                  <input [(ngModel)]="contacto.apellidos" [name]="'contactoApellidos' + i" required />
+                </label>
+                <label class="form-field">
+                  <span>Parentesco</span>
+                  <input [(ngModel)]="contacto.parentesco" [name]="'contactoParentesco' + i" />
+                </label>
+                <label class="form-field">
+                  <span>Teléfono <b>*</b></span>
+                  <input [(ngModel)]="contacto.telefono" [name]="'contactoTelefono' + i" maxlength="20" required />
+                </label>
+                <label class="form-field">
+                  <span>Correo</span>
+                  <input type="email" [(ngModel)]="contacto.email" [name]="'contactoEmail' + i" />
+                </label>
+                <label class="form-field">
+                  <span>Identificación de referencia</span>
+                  <input [(ngModel)]="contacto.identificacion_referencia" [name]="'contactoIdentificacion' + i" />
+                </label>
+                <label class="form-field full-field">
+                  <span>Dirección</span>
+                  <input [(ngModel)]="contacto.direccion" [name]="'contactoDireccion' + i" />
+                </label>
+                <label class="form-field full-field">
+                  <span>Observaciones</span>
+                  <textarea [(ngModel)]="contacto.observaciones" [name]="'contactoObservaciones' + i"></textarea>
+                </label>
+              </div>
+
+              <div class="checkbox-row">
+                <label>
+                  <input type="checkbox" [(ngModel)]="contacto.autorizado_recoger" [name]="'contactoAutorizado' + i" />
+                  Autorizado para recoger
+                </label>
+              </div>
+            </fieldset>
+          }
+        </section>
+
+        @if (mensajeError) {
+          <p class="form-error" role="alert">{{ mensajeError }}</p>
+        }
+
+        <footer class="form-actions">
+          <button class="primary-button" type="submit" [disabled]="enviando">
+            {{
+              subiendoFoto
+                ? 'Subiendo fotografia...'
+                : enviando
+                  ? 'Guardando expediente...'
+                  : modoEdicion
+                    ? 'Guardar cambios'
+                    : 'Registrar niño'
+            }}
+          </button>
+          <button class="secondary-button" type="button" (click)="volverAlListado()">Cancelar</button>
+        </footer>
+      </form>
+    }
+  </main>
+</app-shell>

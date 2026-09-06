@@ -1,0 +1,141 @@
+<header class="sk-header">
+  <div class="sk-header-top">
+    <a class="sk-brand" routerLink="/dashboard">SafeKids</a>
+
+    <div class="sk-user-tools">
+      @if (empleado?.id_empleado) {
+        <a
+          class="sk-avatar-link"
+          [routerLink]="['/empleados', empleado.id_empleado]"
+          [attr.aria-label]="'Abrir el perfil de ' + empleado.nombres + ' ' + empleado.apellidos"
+          [title]="'Perfil de ' + empleado.nombres + ' ' + empleado.apellidos"
+        >
+          <img
+            class="sk-avatar"
+            [src]="empleado.foto_url || defaultUserImage"
+            [alt]="empleado.nombres + ' ' + empleado.apellidos"
+          />
+        </a>
+      } @else {
+        <img class="sk-avatar" [src]="defaultUserImage" alt="Usuario" />
+      }
+
+      <div class="sk-settings-wrap">
+        <button
+          class="sk-settings"
+          [class.open]="menuAjustesAbierto"
+          type="button"
+          aria-label="Ajustes"
+          title="Ajustes"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menuAjustesAbierto"
+          aria-controls="settings-menu"
+          (click)="toggleAjustes($event)"
+        >
+          <img src="assets/icons/settings.svg" alt="" />
+        </button>
+
+        @if (menuAjustesAbierto) {
+          <div
+            id="settings-menu"
+            class="sk-settings-menu"
+            role="menu"
+            (click)="$event.stopPropagation()"
+          >
+            <button type="button" role="menuitem" (click)="abrirCambioPassword()">
+              <img src="assets/icons/lock.svg" alt="" />
+              <span>
+                <strong>Cambiar contraseña</strong>
+                <small>Actualizar las credenciales</small>
+              </span>
+            </button>
+            <button type="button" role="menuitem" (click)="abrirAcercaDe()">
+              <img src="assets/icons/info-circle.svg" alt="" />
+              <span>
+                <strong>Acerca de SafeKids</strong>
+                <small>Información de la aplicación</small>
+              </span>
+            </button>
+            <button class="logout-option" type="button" role="menuitem" (click)="logout()">
+              <img src="assets/icons/lock.svg" alt="" />
+              <span>
+                <strong>Salir</strong>
+                <small>Cerrar la sesión actual</small>
+              </span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <nav class="sk-nav" aria-label="Navegacion principal">
+    @for (item of navItemsVisibles; track item.id) {
+      <a [routerLink]="item.route" class="sk-nav-link" [class.active]="active === item.id">
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+</header>
+
+@if (mostrarAcercaDe) {
+  <div class="sk-modal-backdrop" (click)="cerrarAcercaDe()">
+    <section
+      class="sk-about-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="about-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header>
+        <div class="about-product">
+          <img src="assets/images/SafeKids_Logo-favicon.png" alt="" />
+          <div>
+            <span>SafeKids V2</span>
+            <h2 id="about-title">Acerca de SafeKids</h2>
+          </div>
+        </div>
+        <button
+          class="about-close"
+          type="button"
+          aria-label="Cerrar"
+          title="Cerrar"
+          (click)="cerrarAcercaDe()"
+        >
+          ×
+        </button>
+      </header>
+
+      <p class="about-description">
+        Sistema de gestión y comunicación que conecta el trabajo diario de la guardería con las
+        familias.
+      </p>
+
+      <dl class="about-details">
+        <div>
+          <dt>Plataforma web</dt>
+          <dd>Administración de personal, expedientes, reportes y avisos.</dd>
+        </div>
+        <div>
+          <dt>Aplicación móvil</dt>
+          <dd>Consulta de hijos, actividad diaria y notificaciones para tutores.</dd>
+        </div>
+        <div>
+          <dt>Tecnología</dt>
+          <dd>Angular, PHP, MySQL, Android con Kotlin y Firebase.</dd>
+        </div>
+        <div>
+          <dt>Proyecto</dt>
+          <dd>Desarrollo académico individual · 2026</dd>
+        </div>
+      </dl>
+
+      <footer>
+        <span>SafeKids</span>
+        <button type="button" (click)="cerrarAcercaDe()">Cerrar</button>
+      </footer>
+    </section>
+  </div>
+}
+
+<ng-content></ng-content>

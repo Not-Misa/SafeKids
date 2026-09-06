@@ -1,0 +1,234 @@
+<app-shell active="empleados">
+  <main class="employee-form-page">
+    <button class="back-button" type="button" (click)="volver()">
+      <span aria-hidden="true">←</span>
+      {{ modoEdicion ? 'Volver al perfil' : 'Volver al listado' }}
+    </button>
+
+    @if (cargando) {
+      <section class="status-view" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h1>Cargando perfil</h1>
+        <p>Estamos preparando los datos para su edición.</p>
+      </section>
+    } @else if (idEmpleadoGuardado) {
+      <section class="success-view" role="status">
+        <span class="success-symbol" aria-hidden="true">✓</span>
+        <h1>{{ modoEdicion ? 'Cambios guardados' : 'Empleado registrado' }}</h1>
+        <p>
+          {{
+            modoEdicion
+              ? 'La información del perfil fue actualizada correctamente.'
+              : 'La cuenta del empleado ya está lista para utilizarse.'
+          }}
+        </p>
+
+        @if (mensajeAdvertencia) {
+          <p class="success-warning" role="alert">{{ mensajeAdvertencia }}</p>
+        }
+
+        @if (credencialTemporal) {
+          <div class="credential-panel">
+            <div>
+              <span>Correo de acceso</span>
+              <strong>{{ credencialTemporal.email }}</strong>
+            </div>
+            <div>
+              <span>Contraseña temporal</span>
+              <code>{{ credencialTemporal.password_temporal }}</code>
+            </div>
+            <p>Entrega estos datos únicamente al empleado. La contraseña no volverá a mostrarse.</p>
+          </div>
+        }
+
+        <div class="success-actions">
+          <button class="primary-button" type="button" (click)="verPerfil()">
+            Ver perfil
+          </button>
+          @if (!modoEdicion) {
+            <button class="secondary-button" type="button" (click)="registrarOtro()">
+              Registrar otro empleado
+            </button>
+          }
+        </div>
+      </section>
+    } @else {
+      <header class="form-heading">
+        <span>{{ modoEdicion ? 'Actualizar personal' : 'Nueva cuenta' }}</span>
+        <h1>{{ modoEdicion ? 'Editar empleado' : 'Registrar empleado' }}</h1>
+        <p>Completa los datos laborales y de acceso del integrante del equipo.</p>
+      </header>
+
+      <form #empleadoForm="ngForm" class="employee-form" (ngSubmit)="guardar(empleadoForm)">
+        <section class="form-section" aria-labelledby="personal-title">
+          <div class="section-heading">
+            <span>01</span>
+            <div>
+              <h2 id="personal-title">Información personal</h2>
+              <p>Datos de identificación y contacto.</p>
+            </div>
+          </div>
+
+          <div class="photo-field">
+            <div class="photo-preview">
+              <img
+                [src]="fotoPreview"
+                [alt]="empleado.nombres ? 'Fotografía de ' + empleado.nombres : 'Vista previa'"
+              />
+              @if (fotoSeleccionada) {
+                <span>Nueva foto</span>
+              }
+            </div>
+            <div class="photo-controls">
+              <h3>Fotografía de perfil</h3>
+              <p id="employee-photo-help">
+                JPG, PNG o WEBP, hasta 5 MB. Se ajustará a 600 x 600 px.
+              </p>
+              <div class="photo-actions">
+                <input
+                  #fotoInput
+                  id="fotoEmpleado"
+                  class="file-input"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                  aria-describedby="employee-photo-help"
+                  (change)="seleccionarFoto($event)"
+                />
+                <label class="photo-select-button" for="fotoEmpleado">
+                  {{ fotoActualUrl || fotoSeleccionada ? 'Cambiar foto' : 'Seleccionar foto' }}
+                </label>
+                @if (fotoSeleccionada) {
+                  <button
+                    class="photo-discard-button"
+                    type="button"
+                    (click)="descartarFotoSeleccionada()"
+                  >
+                    Descartar cambio
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid two-columns">
+            <label class="form-field">
+              <span>Nombres <b>*</b></span>
+              <input
+                [(ngModel)]="empleado.nombres"
+                name="nombres"
+                maxlength="100"
+                autocomplete="given-name"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span>Apellidos <b>*</b></span>
+              <input
+                [(ngModel)]="empleado.apellidos"
+                name="apellidos"
+                maxlength="120"
+                autocomplete="family-name"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span>Teléfono</span>
+              <input
+                [(ngModel)]="empleado.telefono"
+                name="telefono"
+                maxlength="20"
+                autocomplete="tel"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="account-title">
+          <div class="section-heading">
+            <span>02</span>
+            <div>
+              <h2 id="account-title">Cuenta y puesto</h2>
+              <p>Acceso al sistema y responsabilidades dentro de la guardería.</p>
+            </div>
+          </div>
+
+          <div class="form-grid two-columns">
+            <label class="form-field">
+              <span>Correo de acceso <b>*</b></span>
+              <input
+                type="email"
+                [(ngModel)]="empleado.email"
+                name="email"
+                maxlength="190"
+                autocomplete="email"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span>Rol en el sistema <b>*</b></span>
+              <select
+                [(ngModel)]="empleado.rol"
+                name="rol"
+                [disabled]="esCuentaPropia"
+                required
+              >
+                <option value="EMPLEADO">Empleado</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+              @if (esCuentaPropia) {
+                <small>No puedes quitarte tu propio acceso de administrador.</small>
+              }
+            </label>
+            <label class="form-field">
+              <span>Puesto <b>*</b></span>
+              <input
+                [(ngModel)]="empleado.puesto"
+                name="puesto"
+                maxlength="100"
+                placeholder="Ej. Cuidadora, enfermero, coordinación..."
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span>Fecha de ingreso</span>
+              <input
+                type="date"
+                [(ngModel)]="empleado.fecha_ingreso"
+                name="fechaIngreso"
+                [max]="fechaMaxima"
+              />
+            </label>
+            <label class="form-field full-field">
+              <span>Notas internas</span>
+              <textarea
+                [(ngModel)]="empleado.notas"
+                name="notas"
+                maxlength="500"
+                placeholder="Información laboral relevante..."
+              ></textarea>
+            </label>
+          </div>
+        </section>
+
+        @if (mensajeError) {
+          <p class="form-error" role="alert">{{ mensajeError }}</p>
+        }
+
+        <footer class="form-actions">
+          <button class="primary-button" type="submit" [disabled]="enviando">
+            {{
+              subiendoFoto
+                ? 'Subiendo fotografía...'
+                : enviando
+                  ? 'Guardando información...'
+                  : modoEdicion
+                    ? 'Guardar cambios'
+                    : 'Registrar empleado'
+            }}
+          </button>
+          <button class="secondary-button" type="button" (click)="volver()">Cancelar</button>
+        </footer>
+      </form>
+    }
+  </main>
+</app-shell>

@@ -1,0 +1,249 @@
+<app-shell active="empleados">
+  <main class="profile-page">
+    <button class="back-button" type="button" (click)="volver()">
+      <span aria-hidden="true">←</span>
+      {{ textoVolver }}
+    </button>
+
+    @if (cargando) {
+      <section class="status-view" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h1>Cargando perfil</h1>
+        <p>Estamos consultando la información del empleado.</p>
+      </section>
+    } @else if (mensajeError) {
+      <section class="status-view error-view" role="alert">
+        <span class="status-symbol" aria-hidden="true">!</span>
+        <h1>No pudimos abrir este perfil</h1>
+        <p>{{ mensajeError }}</p>
+        <button type="button" (click)="volver()">Regresar al listado</button>
+      </section>
+    } @else if (empleado) {
+      <section class="employee-summary">
+        <img
+          class="employee-photo"
+          [src]="empleado.foto_url || defaultUserImage"
+          [alt]="'Fotografía de ' + empleado.nombres"
+        />
+        <div class="employee-heading">
+          <span class="eyebrow">Perfil del personal</span>
+          <h1>{{ empleado.nombres }} {{ empleado.apellidos }}</h1>
+          <p>{{ empleado.puesto || 'Puesto no registrado' }}</p>
+          <div class="summary-badges">
+            <span class="role-badge" [class.admin]="empleado.rol === 'ADMIN'">
+              {{ rolLegible(empleado.rol) }}
+            </span>
+            <span
+              class="status-badge"
+              [class.inactive]="empleado.estado === 'INACTIVO'"
+              [class.blocked]="empleado.estado === 'BLOQUEADO'"
+            >
+              {{ empleado.estado }}
+            </span>
+            @if (empleado.es_solicitante) {
+              <span class="self-badge">Tu cuenta</span>
+            }
+          </div>
+          <div class="profile-actions">
+            @if (esAdministrador) {
+              <a class="edit-button" [routerLink]="['/empleados', empleado.id_empleado, 'editar']">
+                Editar perfil
+              </a>
+            }
+            @if (esAdministrador && !empleado.es_solicitante) {
+              <button class="password-button" type="button" (click)="abrirRestablecimiento()">
+                Restablecer contraseña
+              </button>
+              <button
+                class="state-button"
+                [class.reactivate]="empleado.estado !== 'ACTIVO'"
+                type="button"
+                (click)="abrirConfirmacion()"
+              >
+                {{ empleado.estado === 'ACTIVO' ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            }
+          </div>
+        </div>
+      </section>
+
+      @if (mensajeAccion) {
+        <p class="action-message" role="status">{{ mensajeAccion }}</p>
+      }
+
+      <section class="profile-section" aria-labelledby="contact-title">
+        <div class="section-heading">
+          <span>01</span>
+          <div>
+            <h2 id="contact-title">Información personal</h2>
+            <p>Datos de contacto e identificación del integrante.</p>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-field">
+            <span>Nombre completo</span>
+            <strong>{{ empleado.nombres }} {{ empleado.apellidos }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Teléfono</span>
+            <strong>{{ textoOValor(empleado.telefono, 'Sin teléfono') }}</strong>
+          </div>
+          <div class="detail-field wide-field">
+            <span>Correo de acceso</span>
+            <strong>{{ empleado.email }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile-section" aria-labelledby="work-title">
+        <div class="section-heading">
+          <span>02</span>
+          <div>
+            <h2 id="work-title">Información laboral</h2>
+            <p>Puesto, permisos y actividad de la cuenta.</p>
+          </div>
+        </div>
+        <div class="detail-grid detail-grid-three">
+          <div class="detail-field">
+            <span>Puesto</span>
+            <strong>{{ textoOValor(empleado.puesto, 'Sin puesto') }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Rol en el sistema</span>
+            <strong>{{ rolLegible(empleado.rol) }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Fecha de ingreso</span>
+            <strong>{{ fechaLegible(empleado.fecha_ingreso) }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Último acceso</span>
+            <strong>{{ fechaHora(empleado.ultimo_acceso) }}</strong>
+          </div>
+          <div class="detail-field">
+            <span>Estado de contraseña</span>
+            <strong>
+              {{
+                empleado.requiere_cambio_password ? 'Cambio pendiente' : 'Contraseña actualizada'
+              }}
+            </strong>
+          </div>
+          <div class="detail-field">
+            <span>Cuenta creada</span>
+            <strong>{{ fechaLegible(empleado.creado_en) }}</strong>
+          </div>
+          <div class="detail-field wide-field">
+            <span>Notas internas</span>
+            <strong>{{ textoOValor(empleado.notas, 'Sin notas registradas') }}</strong>
+          </div>
+        </div>
+      </section>
+
+      @if (mostrarConfirmacion) {
+        <div class="confirmation-backdrop" (click)="cerrarConfirmacion()">
+          <section
+            class="confirmation-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmation-title"
+            (click)="$event.stopPropagation()"
+          >
+            <span class="confirmation-symbol" aria-hidden="true">!</span>
+            <h2 id="confirmation-title">
+              {{ empleado.estado === 'ACTIVO' ? 'Dar de baja al empleado' : 'Reactivar cuenta' }}
+            </h2>
+            <p>
+              {{
+                empleado.estado === 'ACTIVO'
+                  ? 'La persona dejará de poder iniciar sesión, pero su información permanecerá registrada.'
+                  : 'La persona recuperará el acceso al sistema con su contraseña actual.'
+              }}
+            </p>
+            <div class="confirmation-actions">
+              <button
+                class="confirm-button"
+                [class.reactivate]="empleado.estado !== 'ACTIVO'"
+                type="button"
+                [disabled]="cambiandoEstado"
+                (click)="cambiarEstado()"
+              >
+                {{ cambiandoEstado ? 'Procesando...' : 'Confirmar' }}
+              </button>
+              <button
+                class="cancel-button"
+                type="button"
+                [disabled]="cambiandoEstado"
+                (click)="cerrarConfirmacion()"
+              >
+                Cancelar
+              </button>
+            </div>
+          </section>
+        </div>
+      }
+
+      @if (mostrarRestablecimiento) {
+        <div class="confirmation-backdrop" (click)="cerrarRestablecimiento()">
+          <section
+            class="confirmation-dialog password-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="password-dialog-title"
+            (click)="$event.stopPropagation()"
+          >
+            @if (credencialTemporal) {
+              <span class="confirmation-symbol password-symbol" aria-hidden="true">✓</span>
+              <h2 id="password-dialog-title">Contraseña temporal generada</h2>
+              <p>Entrégala de forma privada. Se solicitará cambiarla en el próximo acceso.</p>
+              <div class="temporary-credential">
+                <span>Correo</span>
+                <strong>{{ credencialTemporal.email }}</strong>
+                <span>Contraseña temporal</span>
+                <code>{{ credencialTemporal.password_temporal }}</code>
+              </div>
+              @if (mensajeCopia) {
+                <p class="copy-message" role="status">{{ mensajeCopia }}</p>
+              }
+              <div class="confirmation-actions">
+                <button class="confirm-button copy-button" type="button" (click)="copiarCredencial()">
+                  Copiar credencial
+                </button>
+                <button class="cancel-button" type="button" (click)="cerrarRestablecimiento()">
+                  Cerrar
+                </button>
+              </div>
+            } @else {
+              <span class="confirmation-symbol" aria-hidden="true">!</span>
+              <h2 id="password-dialog-title">Restablecer contraseña</h2>
+              <p>
+                Se cerrarán las sesiones de {{ empleado.nombres }} y la contraseña anterior dejará
+                de funcionar.
+              </p>
+              @if (mensajeCopia) {
+                <p class="copy-message error-copy" role="alert">{{ mensajeCopia }}</p>
+              }
+              <div class="confirmation-actions">
+                <button
+                  class="confirm-button"
+                  type="button"
+                  [disabled]="restableciendoPassword"
+                  (click)="restablecerPassword()"
+                >
+                  {{ restableciendoPassword ? 'Generando...' : 'Confirmar' }}
+                </button>
+                <button
+                  class="cancel-button"
+                  type="button"
+                  [disabled]="restableciendoPassword"
+                  (click)="cerrarRestablecimiento()"
+                >
+                  Cancelar
+                </button>
+              </div>
+            }
+          </section>
+        </div>
+      }
+    }
+  </main>
+</app-shell>

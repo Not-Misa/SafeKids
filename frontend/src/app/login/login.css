@@ -1,0 +1,132 @@
+body {
+  height: 100dvh;
+  margin: 0;
+}
+
+.main {
+  display: flex;
+  background-color: white;
+  align-items: center;
+  align-content: center;
+}
+
+.greetting {
+  color: white;
+  text-align: center;
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  padding-top: 130px;
+  align-items: center;
+  font-size: 60px;
+}
+
+.image-container {
+  width: 40%;
+  max-width: 650px;
+  display: flex;
+  justify-content: center;
+}
+
+.header-session {
+  font-family: 'Space Grotesk', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.login-success {
+  margin: 0 0 20px;
+  padding: 11px 14px;
+  border: 1px solid #8bd0aa;
+  border-radius: 8px;
+  background: #edf9f2;
+  color: #17643a;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.input {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  border: none;
+}
+
+.form-container {
+  background-color: white;
+  padding: 55px;
+  border-radius: 20px;
+  box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.6);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  margin-top: 60px;
+}
+
+.wrapper-form {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: white;
+  margin-bottom: 15px;
+}
+
+.wrapper-form input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+}
+
+.wrapper-form .icon {
+  width: 25px;
+  height: 25px;
+  margin-right: 12px;
+  opacity: 0.5;
+}
+
+.wrapper-form:focus {
+  box-shadow: 0 0 0 0.25rem rgba(49, 130, 235, 0.25);
+}
+
+.input-form input {
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  font-size: 16px;
+}
+
+.input-form {
+  text-align: left;
+}
+
+.backgroundform-container {
+  flex-direction: column;
+  display: flex;
+  align-items: center;
+  background-color: #3282eb;
+  min-height: 100vh;
+  width: 70%;
+  flex: 1;
+}
+
+.btn {
+  font-weight: 600;
+  margin-top: 20px;
+  background-color: #3282eb;
+  width: 110px;
+  padding: 8px;
+  transition: (0.3s);
+}
+
+.btn:hover {
+  background-color: #2f71c7;
+  transform: scale(1.02);
+}

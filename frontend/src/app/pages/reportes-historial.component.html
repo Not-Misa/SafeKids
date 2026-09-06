@@ -1,0 +1,184 @@
+<app-shell active="ninos">
+  <app-nino-profile-nav
+    [idNino]="idNino"
+    active="historial"
+    [ninoActivo]="!nino || nino.estado === 'ACTIVO'"
+  />
+
+  <main class="history-page">
+    <header class="history-heading">
+      <div>
+        <span>Seguimiento cotidiano</span>
+        <h1>Reportes diarios</h1>
+        @if (nino) {
+          <p>Actividad registrada para {{ nino.nombres }} {{ nino.apellidos }}.</p>
+        } @else {
+          <p>Consulta la actividad registrada en el expediente.</p>
+        }
+      </div>
+      @if (nino?.estado === 'ACTIVO') {
+        <button class="new-report-button" type="button" (click)="nuevoReporte()">
+          <span aria-hidden="true">+</span>
+          Nuevo reporte
+        </button>
+      }
+    </header>
+
+    <section class="history-tools" aria-label="Filtros del historial">
+      <label>
+        <span>Desde</span>
+        <input
+          type="date"
+          [(ngModel)]="fechaDesde"
+          [max]="fechaHasta || fechaMaxima"
+        />
+      </label>
+      <label>
+        <span>Hasta</span>
+        <input
+          type="date"
+          [(ngModel)]="fechaHasta"
+          [min]="fechaDesde"
+          [max]="fechaMaxima"
+        />
+      </label>
+      <label class="type-filter">
+        <span>Tipo</span>
+        <select [(ngModel)]="tipoFiltro">
+          <option value="TODOS">Todos los reportes</option>
+          @for (tipo of tipos; track tipo.codigo) {
+            <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
+          }
+        </select>
+      </label>
+      <button class="filter-button" type="button" (click)="aplicarFiltros()">
+        Aplicar
+      </button>
+      <button class="clear-button" type="button" (click)="limpiarFiltros()">
+        Restablecer
+      </button>
+      <span class="record-count">
+        {{ reportes.length }} {{ reportes.length === 1 ? 'reporte' : 'reportes' }}
+      </span>
+    </section>
+
+    @if (mensajeError) {
+      <section class="status-view error-view" role="alert">
+        <span class="status-symbol" aria-hidden="true">!</span>
+        <h2>No pudimos consultar el historial</h2>
+        <p>{{ mensajeError }}</p>
+        <button type="button" (click)="aplicarFiltros()">Reintentar</button>
+      </section>
+    } @else if (cargando) {
+      <section class="status-view" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <h2>Cargando reportes</h2>
+        <p>Estamos consultando la actividad del periodo seleccionado.</p>
+      </section>
+    } @else if (reportes.length === 0) {
+      <section class="status-view empty-view">
+        <span class="empty-symbol" aria-hidden="true">0</span>
+        <h2>No hay actividad en este periodo</h2>
+        <p>Ajusta los filtros o registra un nuevo reporte diario.</p>
+        @if (nino?.estado === 'ACTIVO') {
+          <button type="button" (click)="nuevoReporte()">Registrar reporte</button>
+        }
+      </section>
+    } @else {
+      <section class="timeline" aria-label="Actividad diaria">
+        @for (reporte of reportes; track reporte.id_evento; let i = $index) {
+          @if (mostrarFecha(i)) {
+            <h2 class="date-heading">{{ fechaTitulo(reporte.fecha_hora_evento) }}</h2>
+          }
+
+          <article
+            class="report-item"
+            [class.important]="reporte.nivel === 'IMPORTANTE'"
+            [class.urgent]="reporte.nivel === 'URGENTE'"
+          >
+            <div class="type-marker" [attr.data-type]="reporte.tipo.codigo">
+              {{ inicialTipo(reporte.tipo.nombre) }}
+            </div>
+            <div class="report-content">
+              <header>
+                <div>
+                  <span class="type-name">{{ reporte.tipo.nombre }}</span>
+                  <h3>{{ tituloReporte(reporte) }}</h3>
+                </div>
+                <div class="report-meta">
+                  <span
+                    class="level-badge"
+                    [class.important]="reporte.nivel === 'IMPORTANTE'"
+                    [class.urgent]="reporte.nivel === 'URGENTE'"
+                  >
+                    {{ reporte.nivel }}
+                  </span>
+                  <time>{{ hora(reporte.fecha_hora_evento) }}</time>
+                </div>
+              </header>
+
+              @if (reporte.descripcion) {
+                <p class="report-description">{{ reporte.descripcion }}</p>
+              }
+
+              @if (detalleLegible(reporte.detalle_json).length > 0) {
+                <dl class="report-details">
+                  @for (detalle of detalleLegible(reporte.detalle_json); track detalle.etiqueta) {
+                    <div>
+                      <dt>{{ detalle.etiqueta }}</dt>
+                      <dd>{{ detalle.valor }}</dd>
+                    </div>
+                  }
+                </dl>
+              }
+
+              <footer>
+                <span>
+                  Registrado por
+                  <strong>
+                    {{ reporte.empleado.nombres }} {{ reporte.empleado.apellidos }}
+                  </strong>
+                </span>
+                @if (reporte.imagenes.length > 0) {
+                  <button
+                    class="evidence-button"
+                    type="button"
+                    (click)="abrirImagen(reporte.imagenes[0])"
+                  >
+                    Ver evidencia
+                  </button>
+                }
+              </footer>
+            </div>
+          </article>
+        }
+      </section>
+    }
+
+    @if (imagenSeleccionada) {
+      <div class="image-backdrop" (click)="cerrarImagen()">
+        <section
+          class="image-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Evidencia fotográfica"
+          (click)="$event.stopPropagation()"
+        >
+          <button
+            class="close-image-button"
+            type="button"
+            aria-label="Cerrar evidencia"
+            title="Cerrar"
+            (click)="cerrarImagen()"
+          >
+            ×
+          </button>
+          <img [src]="imagenSeleccionada.url" alt="Evidencia del reporte diario" />
+          @if (imagenSeleccionada.descripcion) {
+            <p>{{ imagenSeleccionada.descripcion }}</p>
+          }
+        </section>
+      </div>
+    }
+  </main>
+</app-shell>

@@ -1,0 +1,132 @@
+<app-shell active="empleados">
+  <main class="employees-page">
+    <header class="page-heading">
+      <div>
+        <span>Equipo de trabajo</span>
+        <h1>Administrar empleados</h1>
+        <p>Gestiona las cuentas y responsabilidades del personal de la guardería.</p>
+      </div>
+      <a class="add-employee-button" routerLink="/administrar-empleados/nuevo">
+        <span aria-hidden="true">+</span>
+        Agregar personal
+      </a>
+    </header>
+
+    <section class="list-tools" aria-label="Herramientas del listado">
+      <div class="list-search">
+        <img src="assets/icons/search.svg" alt="" />
+        <input
+          type="search"
+          [ngModel]="busqueda"
+          (ngModelChange)="onBusquedaChange($event)"
+          placeholder="Buscar por nombre, correo o puesto..."
+          autocomplete="off"
+        />
+      </div>
+      <label class="state-filter">
+        <span>Estado</span>
+        <select [(ngModel)]="filtroEstado" (ngModelChange)="onEstadoChange()">
+          <option value="TODOS">Todos</option>
+          <option value="ACTIVO">Activos</option>
+          <option value="INACTIVO">Inactivos</option>
+          <option value="BLOQUEADO">Bloqueados</option>
+        </select>
+      </label>
+      <span class="record-count">
+        {{ empleados.length }} {{ empleados.length === 1 ? 'registro' : 'registros' }}
+      </span>
+    </section>
+
+    @if (mensajeError) {
+      <div class="list-message error" role="alert">
+        <strong>No pudimos cargar el personal</strong>
+        <span>{{ mensajeError }}</span>
+        <button type="button" (click)="cargarEmpleados()">Reintentar</button>
+      </div>
+    } @else if (cargando) {
+      <div class="list-message" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <strong>Cargando empleados...</strong>
+      </div>
+    } @else if (empleados.length === 0) {
+      <div class="list-message empty">
+        <img src="assets/images/default-user.jpg" alt="" />
+        <strong>No hay resultados</strong>
+        <span>
+          {{
+            busqueda || filtroEstado !== 'TODOS'
+              ? 'Cambia los filtros para ampliar la búsqueda.'
+              : 'Registra al primer integrante del equipo.'
+          }}
+        </span>
+      </div>
+    } @else {
+      <div class="employees-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Empleado</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th>Puesto</th>
+              <th>Ingreso</th>
+              <th>Último acceso</th>
+              <th>Estado</th>
+              <th><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (empleado of empleados; track empleado.id_empleado) {
+              <tr>
+                <td>
+                  <div class="employee-cell">
+                    <img
+                      [src]="empleado.foto_url || defaultUserImage"
+                      [alt]="empleado.nombres"
+                    />
+                    <div>
+                      <strong>
+                        {{ empleado.nombres }} {{ empleado.apellidos }}
+                        @if (empleado.es_solicitante) {
+                          <span class="current-label">Tú</span>
+                        }
+                      </strong>
+                      <span>{{ empleado.telefono || 'Sin teléfono' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ empleado.email }}</td>
+                <td>
+                  <span class="role-badge" [class.admin]="empleado.rol === 'ADMIN'">
+                    {{ rolLegible(empleado.rol) }}
+                  </span>
+                </td>
+                <td>{{ empleado.puesto || 'Sin puesto' }}</td>
+                <td>{{ fechaCorta(empleado.fecha_ingreso) }}</td>
+                <td>{{ fechaHora(empleado.ultimo_acceso) }}</td>
+                <td>
+                  <span
+                    class="state-badge"
+                    [class.inactive]="empleado.estado === 'INACTIVO'"
+                    [class.blocked]="empleado.estado === 'BLOQUEADO'"
+                  >
+                    {{ empleado.estado }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    class="view-profile-button"
+                    type="button"
+                    (click)="abrirPerfil(empleado.id_empleado)"
+                  >
+                    Ver perfil
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </main>
+</app-shell>

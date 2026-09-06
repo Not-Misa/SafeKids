@@ -1,0 +1,186 @@
+<app-shell [active]="esPersonal ? 'ninos' : 'notificaciones'">
+  @if (esPersonal && nino) {
+    <app-nino-profile-nav
+      [idNino]="nino.id_nino"
+      active="notificacion"
+      [ninoActivo]="nino.estado === 'ACTIVO'"
+    />
+  }
+
+  <main class="sk-page notification-page">
+    @if (cargandoContexto) {
+      <section class="notification-status" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <p>Cargando destinatarios...</p>
+      </section>
+    } @else {
+      <header class="notification-heading">
+        <span>{{ esPersonal ? 'Comunicación individual' : 'Comunicación general' }}</span>
+        <h1>
+          @if (esPersonal && nino) {
+            Notificación para {{ nino.nombres }}
+          } @else {
+            Crear notificación global
+          }
+        </h1>
+        <p>
+          @if (esPersonal) {
+            Solo los tutores vinculados con este niño recibirán el mensaje.
+          } @else {
+            El mensaje será enviado a los tutores activos de la guardería.
+          }
+        </p>
+      </header>
+
+      @if (esPersonal && nino) {
+        <section class="recipient-summary">
+          <img [src]="nino.foto_url || defaultUserImage" [alt]="'Fotografía de ' + nino.nombres" />
+          <div>
+            <span>Destinatario del aviso</span>
+            <strong>{{ nino.nombres }} {{ nino.apellidos }}</strong>
+            @if (tutoresDestinatarios.length > 0) {
+              <p>
+                Se notificará a
+                @for (tutor of tutoresDestinatarios; track tutor.id_tutor; let ultimo = $last) {
+                  <b>{{ tutor.nombres }} {{ tutor.apellidos }}</b
+                  >{{ ultimo ? '.' : ', ' }}
+                }
+              </p>
+            } @else {
+              <p class="recipient-warning">
+                No hay tutores habilitados para recibir notificaciones.
+              </p>
+            }
+          </div>
+        </section>
+      }
+
+      <form class="sk-form-card notification-form" (ngSubmit)="enviar()">
+        <label class="sk-field">
+          <span><strong>*</strong> Razón de la notificación</span>
+          <select [(ngModel)]="razon" (ngModelChange)="alCambiarRazon()" name="razon" required>
+            <option value="">Seleccione una opción</option>
+            @for (tipo of tiposDisponibles; track tipo.codigo) {
+              <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="sk-field">
+          <span><strong>*</strong> Asunto</span>
+          <input
+            [(ngModel)]="asunto"
+            name="asunto"
+            maxlength="50"
+            placeholder="Escriba el asunto..."
+            required
+          />
+          <small>{{ asunto.length }}/50</small>
+        </label>
+
+        <label class="sk-field">
+          <span><strong>*</strong> Descripción</span>
+          <textarea
+            [(ngModel)]="descripcion"
+            name="descripcion"
+            placeholder="Escriba los detalles de la notificación..."
+            required
+          ></textarea>
+        </label>
+
+        <section class="attachment-field" aria-labelledby="attachment-title">
+          <div class="attachment-heading">
+            <img src="assets/icons/photo.svg" alt="" />
+            <div>
+              <h2 id="attachment-title">Imagen adjunta</h2>
+              <p>Opcional. JPG, PNG o WEBP, hasta 5 MB.</p>
+            </div>
+          </div>
+
+          @if (imagenPreview) {
+            <div class="attachment-preview">
+              <img [src]="imagenPreview" alt="Vista previa de la imagen adjunta" />
+              <div>
+                <strong>{{ imagenSeleccionada?.name }}</strong>
+                <span>La imagen se mostrará al abrir la notificación.</span>
+                <button type="button" (click)="descartarImagen()">Quitar imagen</button>
+              </div>
+            </div>
+          } @else {
+            <div class="attachment-picker">
+              <input
+                #imagenInput
+                id="imagenNotificacion"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="seleccionarImagen($event)"
+              />
+              <label for="imagenNotificacion">
+                <img src="assets/icons/photo.svg" alt="" />
+                Seleccionar imagen
+              </label>
+              <span>No se ha seleccionado ningún archivo.</span>
+            </div>
+          }
+        </section>
+
+        <fieldset class="priority-field">
+          <legend>Prioridad</legend>
+          <div class="priority-options">
+            <label [class.selected]="prioridad === 'NORMAL'">
+              <input type="radio" [(ngModel)]="prioridad" name="prioridad" value="NORMAL" />
+              Normal
+            </label>
+            <label [class.selected]="prioridad === 'IMPORTANTE'">
+              <input type="radio" [(ngModel)]="prioridad" name="prioridad" value="IMPORTANTE" />
+              Importante
+            </label>
+            <label [class.selected]="prioridad === 'URGENTE'">
+              <input type="radio" [(ngModel)]="prioridad" name="prioridad" value="URGENTE" />
+              Urgente
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="confirmation-option">
+          <input type="checkbox" [(ngModel)]="requiereConfirmacion" name="requiereConfirmacion" />
+          <span>
+            <strong>Solicitar confirmación de lectura</strong>
+            Los tutores deberán confirmar que recibieron el mensaje.
+          </span>
+        </label>
+
+        <p class="delivery-note">
+          @if (esPersonal && nino) {
+            Esta notificación quedará asociada al expediente de
+            <strong>{{ nino.nombres }} {{ nino.apellidos }}</strong
+            >.
+          } @else {
+            Esta notificación tendrá alcance <strong>global</strong> dentro de la guardería.
+          }
+        </p>
+
+        @if (mensajeError) {
+          <p class="form-message error" role="alert">{{ mensajeError }}</p>
+        }
+
+        @if (mensajeExito) {
+          <p class="form-message success" role="status">{{ mensajeExito }}</p>
+        }
+
+        <div class="sk-actions">
+          <button
+            class="sk-primary-btn"
+            type="submit"
+            [disabled]="enviando || (esPersonal && tutoresDestinatarios.length === 0)"
+          >
+            {{ enviando ? 'Enviando...' : 'Enviar notificación' }}
+          </button>
+          <button class="sk-warning-btn" type="button" (click)="cancelar()">Cancelar</button>
+        </div>
+
+        <p class="sk-required-note">Los campos con asterisco (*) son obligatorios.</p>
+      </form>
+    }
+  </main>
+</app-shell>
