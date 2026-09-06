@@ -1,0 +1,26 @@
+# Configuracion y credenciales
+.env
+.env.*
+!.env.example
+*.ini
+!database.example.ini
+!app.example.ini
+!.user.ini
+firebase-service-account*.json
+service-account*.json
+credentials*.json
+*.pem
+*.key
+
+# Dependencias y resultados
+/vendor/
+/coverage/
+/.phpunit.cache/
+.phpunit.result.cache
+*.log
+
+# Herramientas y sistema
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db

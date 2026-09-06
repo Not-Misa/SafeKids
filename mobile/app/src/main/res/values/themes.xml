@@ -1,0 +1,16 @@
+<resources>
+  <style name="Theme.SafeKidsMobile.Starting" parent="Theme.SplashScreen.IconBackground">
+    <item name="windowSplashScreenBackground">@color/safekids_blue</item>
+    <item name="windowSplashScreenAnimatedIcon">@drawable/safekids_splash_logo</item>
+    <item name="windowSplashScreenIconBackgroundColor">@color/safekids_icon_background</item>
+    <item name="windowSplashScreenAnimationDuration">300</item>
+    <item name="postSplashScreenTheme">@style/Theme.SafeKidsMobile</item>
+  </style>
+
+  <style name="Theme.SafeKidsMobile" parent="android:style/Theme.Material.Light.NoActionBar">
+    <item name="android:fontFamily">sans</item>
+    <item name="android:windowLightStatusBar">false</item>
+    <item name="android:statusBarColor">@color/safekids_blue</item>
+    <item name="android:navigationBarColor">@color/safekids_background</item>
+  </style>
+</resources>

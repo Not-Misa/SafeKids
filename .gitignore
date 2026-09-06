@@ -1,0 +1,29 @@
+# Dependencias y compilaciones
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+mobile/.gradle/
+mobile/.idea/
+mobile/.kotlin/
+mobile/build/
+mobile/app/build/
+
+# Configuracion local y secretos
+**/.env
+**/.env.*
+!**/.env.example
+**/database.ini
+**/cloudinary.ini
+**/firebase-service-account.json
+**/local.properties
+**/keystore.properties
+**/*.jks
+**/*.keystore
+
+# Vistas PHP antiguas reemplazadas por Angular
+backend/legacy_php_views/
+
+# Logs y archivos del sistema
+**/*.log
+Thumbs.db
+.DS_Store

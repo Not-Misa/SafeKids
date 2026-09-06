@@ -1,0 +1,6 @@
+<resources>
+  <string name="app_name">SafeKids</string>
+  <string name="safekids_notification_channel_id">safekids_alertas</string>
+  <string name="safekids_notification_channel_name">Avisos de SafeKids</string>
+  <string name="safekids_notification_channel_description">Notificaciones personales y generales de la guarderia</string>
+</resources>
